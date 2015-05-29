@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<style>
+		body {
+			margin: 0px;
+			padding: 0px;
+		}
+		#container {
+		}
+		</style>
+		<title>board game</title>
+		<br><center>
+		<h1>board game</h1>
+		</center>
+		<br><hr><br><br>
+	</head>
+	<body>
+		<center>
+			<div id="container"></div>
+		</center>
+		<script type="text/javascript" src="kinetic-v5.1.0.min.js"></script>
+		<!-- Connecting to online server -->
+		<script type="text/javascript" src="http://173.70.73.61:8895/socket.io/socket.io.js"></script>
+		<script type="text/javascript">var socket = io.connect('http://173.70.73.61:8895');</script>
+
+		<script type="text/javascript" src="main.js"></script>
+	</body>
+	<!--footer>
+		<center><br><h2><a href="guide/index.html" target="_blank">Guide</a></h3>
+		<br><br><h5>copyright blah blah 2014</h5></center>
+	</footer-->
+</html>
