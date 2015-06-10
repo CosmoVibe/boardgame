@@ -21,7 +21,7 @@ var rect = new Kinetic.Rect({
 layer.add(rect);
 stage.add(layer);
 
-socket.emit('talk', {'string': "HI SHELLEY LETS FUCK!"});
+socket.emit('talk', {'string': "HI SHELLEY!"});
 socket.on('confirmation', function(data) {
     console.log(data.msg);
 });
