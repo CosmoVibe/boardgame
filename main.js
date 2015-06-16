@@ -27,6 +27,76 @@ function preloadGameImages() {
 }
 preloadGameImages();
 
+// Sprite locations of the pokemon sprite sheet
+var spriteloc = [
+	{x: 6, y: 7, width: 64, height: 64},	// 0
+	{x: 88, y: 8, width: 64, height: 64},
+	{x: 166, y: 9, width: 64, height: 64},
+	{x: 252, y: 10, width: 64, height: 64},
+	{x: 326, y: 10, width: 64, height: 64},
+	{x: 6, y: 97, width: 64, height: 64},	// 5
+	{x: 90, y: 93, width: 64, height: 64},
+	{x: 170, y: 88, width: 64, height: 64},
+	{x: 253, y: 86, width: 64, height: 64},
+	{x: 330, y: 85, width: 64, height: 64}
+];
+
+
+
+
+// Game state variables //
+
+var units = [];
+units[0] = [
+	{
+		id: 0,
+		position: [0,0]
+	},
+	{
+		id: 1,
+		position: [0,1]
+	},
+	{
+		id: 2,
+		position: [0,2]
+	},
+	{
+		id: 3,
+		position: [0,3]
+	},
+	{
+		id: 4,
+		position: [0,4]
+	}
+];
+units[1] = [
+	{
+		id: 5,
+		position: [4,0]
+	},
+	{
+		id: 6,
+		position: [4,1]
+	},
+	{
+		id: 7,
+		position: [4,2]
+	},
+	{
+		id: 8,
+		position: [4,3]
+	},
+	{
+		id: 9,
+		position: [3,4]
+	}
+];
+
+
+
+
+
+
 
 // Layers
 var tileLayer = new Kinetic.Layer();
@@ -59,6 +129,7 @@ connectButtonText.moveToTop();
 overlayLayer.add(connectButton);
 stage.add(overlayLayer);
 
+// code for buttons
 connectButton.on('mouseover', function() {
 	document.body.style.cursor = 'pointer';
 });
@@ -68,6 +139,7 @@ connectButton.on('mouseout', function() {
 connectButton.on('click', function(evt) {
 	socket.emit('confirmlogin',{});
 });
+
 socket.on('confirmlogin', function(data) {
 	connectButtonBox.setAttrs({fill: 'green'});
 	connectButtonText.setAttrs({text: 'you are player ' + (data.p+1)});
@@ -127,10 +199,10 @@ function boardrefresh() {
 		for (var y = 0; y <= mapy; y++) {
 			if (boardtiles[x]) {
 				if (boardtiles[x][y]) {
-					console.log('Drawing tile ' + x + ', ' + y);
+					// console.log('Drawing tile ' + x + ', ' + y);
 					// At the moment every tile is drawn the same
 					// This would be where you check to see what tile should be drawn
-					boardtiles[x][y].setImage(images.tile);
+					boardtiles[x][y].setImage(images.grass);
 				}
 			}
 		}
@@ -146,22 +218,28 @@ unitborders[1] = [];
 var unitimages = [];
 unitimages[0] = [];
 unitimages[1] = [];
-for (var p = 0; p < 1; p++) {
+for (var p = 0; p < 2; p++) {
 	for (var n = 0; n < 5; n++) {
 		unitborders[p][n] = new Kinetic.Rect({
-			x: boardstartx+(p*4)*tilesize,
-			y: boardstarty+n*tilesize,
-			width: tilesize,
-			height: tilesize,
-			stroke: 'black',
-			strokeWidth: 2
+			x: boardstartx+(p*4)*tilesize+1,
+			y: boardstarty+n*tilesize+1,
+			width: tilesize-2,
+			height: tilesize-2,
+			stroke: 'blue',
+			strokeWidth: 1
 		});
 		unitimages[p][n] = new Kinetic.Image({
 			x: boardstartx+(p*4)*tilesize,
 			y: boardstarty+n*tilesize,
-			image: new Image(),
+			image: images.spritesheet,
 			width: tilesize,
-			height: tilesize
+			height: tilesize,
+			crop: {
+				x: 64*n,
+				y: 64*n,
+				width: 64,
+				height: 64
+			}
 		});
 		unitLayer.add(unitborders[p][n]);
 		unitLayer.add(unitimages[p][n]);
@@ -169,7 +247,31 @@ for (var p = 0; p < 1; p++) {
 }
 stage.add(unitLayer);
 
-
+function unitrefresh() {
+	for (var p = 0; p < 2; p++) {
+		for (var n = 0; n < 5; n++) {
+			if (unitimages[p][n]) {
+				if (unitimages[p][n]) {
+					// adjust unit image appropriately
+					
+					// adjust position/tile
+					unitborders[p][n].setAttrs({
+						x: boardstartx + units[p][n].position[0]*tilesize + 1,
+						y: boardstarty + units[p][n].position[1]*tilesize + 1
+					});
+					unitimages[p][n].setAttrs({
+						x: boardstartx + units[p][n].position[0]*tilesize,
+						y: boardstarty + units[p][n].position[1]*tilesize
+					});
+					// change sprite
+					unitimages[p][n].setAttrs({crop: spriteloc[units[p][n].id]});
+				}
+			}
+		}
+	}
+	unitLayer.draw();
+}
+unitrefresh();
 
 
 
