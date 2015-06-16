@@ -43,6 +43,10 @@ var spriteloc = [
 
 
 
+// Client variables
+var selectedunit = [-1,-1];
+var selectedtile = [-1,-1];
+
 
 // Game state variables //
 
@@ -178,7 +182,7 @@ for (var x = 0; x < mapx; x++) {
 			width: tilesize,
 			height: tilesize,
 			stroke: 'black',
-			strokeWidth: 2
+			strokeWidth: 1
 		});
 		boardtiles[x][y] = new Kinetic.Image({
 			x: boardstartx+x*tilesize,
@@ -187,6 +191,29 @@ for (var x = 0; x < mapx; x++) {
 			width: tilesize,
 			height: tilesize
 		});
+		boardtiles[x][y].id = [x,y];	// we use this to help us figure out which tile is being clicked (see below)
+
+		// code for buttons
+		boardtiles[x][y].on('mouseover', function() {
+			document.body.style.cursor = 'pointer';
+		});
+		boardtiles[x][y].on('mouseout', function() {
+			document.body.style.cursor = 'default';
+		});
+		boardtiles[x][y].on('click', function(evt) {
+			if (selectedtile == this.id) {
+				selectedtile = [-1,-1];
+				console.log("no tile selected");
+				tileborders[this.id[0]][this.id[1]].setAttrs({stroke: 'black'});
+			}
+			else {
+				selectedtile = this.id;
+				console.log("the tile " + this.id + " is selected");
+				tileborders[this.id[0]][this.id[1]].setAttrs({stroke: 'yellow'});
+			}
+			tileLayer.draw();
+		});
+
 		tilegroup.add(tileborders[x][y]);
 		tilegroup.add(boardtiles[x][y]);
 	}
@@ -241,6 +268,29 @@ for (var p = 0; p < 2; p++) {
 				height: 64
 			}
 		});
+		unitimages[p][n].id = [p,n];	// we use this to help us figure out which unit is being clicked (see below)
+
+		// code for buttons
+		unitimages[p][n].on('mouseover', function() {
+			document.body.style.cursor = 'pointer';
+		});
+		unitimages[p][n].on('mouseout', function() {
+			document.body.style.cursor = 'default';
+		});
+		unitimages[p][n].on('click', function(evt) {
+			if (selectedunit == this.id) {
+				selectedunit = [-1,-1];
+				console.log("no unit selected");
+				unitborders[this.id[0]][this.id[1]].setAttrs({stroke: 'blue'});
+			}
+			else {
+				selectedunit = this.id;
+				console.log("unit " + this.id[1] + " of player " + (this.id[0]+1) + " is selected");
+				unitborders[this.id[0]][this.id[1]].setAttrs({stroke: 'yellow'});
+			}
+			unitLayer.draw();
+		});
+		
 		unitLayer.add(unitborders[p][n]);
 		unitLayer.add(unitimages[p][n]);
 	}
