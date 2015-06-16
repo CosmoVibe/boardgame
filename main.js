@@ -140,17 +140,21 @@ connectButton.on('mouseover', function() {
 connectButton.on('mouseout', function() {
 	document.body.style.cursor = 'default';
 });
+
+socket.on('confirmlogin2', function(data) {
+	connectButtonBox.setAttrs({fill: 'green'});
+	connectButtonText.setAttrs({text: 'you are player ' + (data.player)});
+	connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
+	console.log('you are player ' + (data.player));
+	overlayLayer.draw();
+});
+
 connectButton.on('click', function(evt) {
+	console.log("Clicked"); 
 	socket.emit('confirmlogin',{});
 });
 
-socket.on('confirmlogin', function(data) {
-	connectButtonBox.setAttrs({fill: 'green'});
-	connectButtonText.setAttrs({text: 'you are player ' + (data.p+1)});
-	connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
-	console.log('you are player ' + (data.p+1));
-	overlayLayer.draw();
-});
+
 socket.on('playersfull', function(data) {
 	connectButtonBox.setAttrs({fill: 'red'});
 	connectButtonText.setAttrs({text: 'server is full'});
@@ -329,7 +333,7 @@ unitrefresh();
 // emit - send to server
 // on - executes on receiving from server
 
-socket.emit('talk', {'string': "HI SHELLEY!"});
+//socket.emit('talk', {'string': "HI SHELLEY!"});
 socket.on('playersfull', function(data) {
 	console.log('Server is full.');
 });
