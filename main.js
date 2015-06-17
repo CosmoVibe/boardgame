@@ -8,6 +8,7 @@ var stage = new Kinetic.Stage({
 });
 
 // Images //
+//
 var imgsources = {
 	tile: 'img/tile.png',
 	wall: 'img/wall.png',

@@ -14,7 +14,7 @@ io.sockets.on('connection', function(socket) {
 	var userID = nextUserID++;
 	liveSockets[userID] = socket;
 	console.log("New connection of ID " + userID);
-    
+    //
 	// Server variables
 	var p1;
 	var p2;
