@@ -8,17 +8,16 @@ io.set('log level', 1);
 var liveSockets = [];
 var nextUserID = 1;
 
+// Server variables
+var p1;
+var p2;
+var currentturn = 0;	// 0 means game is not underway, 1 means it is p1's turn, 2 means it is p2's turn
 
 // socket connection
 io.sockets.on('connection', function(socket) {
 	var userID = nextUserID++;
 	liveSockets[userID] = socket;
 	console.log("New connection of ID " + userID);
-    //
-	// Server variables
-	var p1;
-	var p2;
-	var currentturn = 0;	// 0 means game is not underway, 1 means it is p1's turn, 2 means it is p2's turn
 	
 	// Assigns 2 players to play
 	socket.on('confirmlogin', function(data) {
