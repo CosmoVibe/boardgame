@@ -1,0 +1,7 @@
+Fighter Class Passive, Ability
+
+Bulldozer 每 Gains attack for each turn (?) passed. Chargeable(Can dash up to X amount of tiles for X amount of energy) Deal x amount of damage for units Bulldozer ran past. - rhyperior
+
+Immovable Warrior 每 Stationary (Cannot attack) , Gain immense attack, Attack every enemy around the tile he is in. 每 glalie
+
+Juggernaut 每 Gains immense defense for ( 2turns) and able to move twice tiles, as well as attack twice (1 turn)

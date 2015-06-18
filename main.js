@@ -4,6 +4,7 @@ var selectedtile = [-1,-1];
 var gamestarted = false;
 var playernum = -1;
 var currentturn = 0;
+var selectedaction = -1;	// 0 means movement, 1+ means skill
 
 
 // Game state variables //
@@ -49,7 +50,7 @@ units[2] = [
 	},
 	{
 		id: 9,
-		position: [3,4]
+		position: [4,4]
 	}
 ];
 
@@ -58,6 +59,7 @@ units[2] = [
 // Layers //
 
 // these layers should be in this display order from top to bottom
+var menuLayer = new Kinetic.Layer();	// draws meun box that holds button where players choose what the unit does
 var overlayLayer = new Kinetic.Layer(); 	// draws buttons and info
 var unitLayer = new Kinetic.Layer();	// draws the units
 var tileLayer = new Kinetic.Layer();	// draws the tiles
@@ -131,7 +133,7 @@ connectButtonText.moveToTop();
 overlayLayer.add(connectButton);
 
 // confirm button
-var confirmButton = new Kinetic.Group({x: 400, y: 100});
+var confirmButton = new Kinetic.Group({x: 400, y: 50});
 var confirmButtonBox = new Kinetic.Rect({
 	width: 200,
 	height: 40,
@@ -198,19 +200,54 @@ for (var x = 0; x < mapx; x++) {
 		boardtiles[x][y].on('mouseout', function() {
 			document.body.style.cursor = 'default';
 		});
+		// at some point, we need to put this in a function to move the code somewhere that makes more sense
 		boardtiles[x][y].on('click', function(evt) {
-			// if a tile clicked is already highlighted, un-highlight it
-			if (selectedtile == this.id) {
-				selectedtile = [-1,-1];
-				console.log("no tile selected");
-				tileborders[this.id[0]][this.id[1]].setAttrs({stroke: 'black'});
+			// if there is selected action taking place
+			if (selectedaction === 1) {
+				// if unit was selected, and move choice was made, send move to the server
 			}
-			// if a tile is clicked, highlight it (and un-highlight the previously selected unit)
+			else if (selectedaction == 0 && selectedunit[0] == playernum) {
+				// send move to server
+				socket.emit('playermove', {
+					unit: selectedunit[1],
+					type: 'move',
+					arg: {
+						direction: [
+							this.id[0]-units[playernum][selectedunit[1]].position[0],
+							this.id[1]-units[playernum][selectedunit[1]].position[1]
+						]
+					}
+				});
+				// clear selections
+				resetmenugroup();
+				menugroup.hide();
+				menuLayer.draw();
+				
+				resettileselection();
+				
+				resetunitselection();
+				
+			}
+			// if there is no selected action taking place
 			else {
-				if (!selectedtile == [-1,-1]) tileborders[selectedtile[0]][selectedtile[1]].setAttrs({stroke: 'black'});
-				selectedtile = this.id;
-				console.log("the tile " + this.id + " is selected");
-				tileborders[this.id[0]][this.id[1]].setAttrs({stroke: 'yellow'});
+				// if a tile clicked is already highlighted, un-highlight it
+				if (selectedtile == this.id) {
+					resettileselection();
+				}
+				// if a tile is clicked, highlight it (and un-highlight the previously selected unit or tile)
+				else {
+					resetunitselection();
+					
+					// if unit was selected, but move choice was not, hide menu group
+					resetmenugroup();
+					menugroup.hide();
+					menuLayer.draw();
+
+					if (selectedtile[0] != -1) tileborders[selectedtile[0]][selectedtile[1]].setAttrs({stroke: 'black'});
+					selectedtile = this.id;
+					console.log("the tile " + this.id + " is selected");
+					tileborders[this.id[0]][this.id[1]].setAttrs({stroke: 'yellow'});
+				}
 			}
 			tileLayer.draw();
 		});
@@ -239,6 +276,16 @@ function boardrefresh() {
 	tileLayer.draw();
 }
 boardrefresh();
+
+function resettileselection() {
+	if (selectedtile[0] != -1) {
+		tileborders[selectedtile[0]][selectedtile[1]].setAttrs({stroke: 'black'});
+		selectedtile = [-1,-1];
+		tileLayer.draw();
+	}
+}
+
+
 
 // Draw Units //
 var unitborders = [];
@@ -279,18 +326,36 @@ for (var p = 1; p <= 2; p++) {
 		unitimages[p][n].on('mouseout', function() {
 			document.body.style.cursor = 'default';
 		});
+		// at some point, we need to put this in a function to move the code somewhere that makes more sense
 		unitimages[p][n].on('click', function(evt) {
-			// if a unit clicked is already highlighted, un-highlight it
-			if (selectedunit == this.id) {
-				selectedunit = [-1,-1];
-				console.log("no unit selected");
-				unitborders[this.id[0]][this.id[1]].setAttrs({stroke: 'blue'});
+			// if there is selected action taking place
+			if (selectedaction === 1) {
 			}
-			// if a unit is clicked, highlight it (and un-highlight the previously selected unit)
+			// if there is no selected action taking place
 			else {
-				selectedunit = this.id;
-				console.log("unit " + this.id[1] + " of player " + (this.id[0]+1) + " is selected");
-				unitborders[this.id[0]][this.id[1]].setAttrs({stroke: 'yellow'});
+				// if a unit clicked is already highlighted, un-highlight it
+				if (selectedunit == this.id) {
+					console.log("no unit selected");
+					resetunitselection();
+					// in addition, remove the menu for move options
+					resetmenugroup();
+					menugroup.hide();
+					menuLayer.draw();
+				}
+				// if a unit is clicked, highlight it (and un-highlight the previously selected unit or tile)
+				else {
+					resettileselection();
+					
+					if (selectedunit[0] != -1) unitborders[selectedunit[0]][selectedunit[1]].setAttrs({stroke: 'blue'});
+					selectedunit = this.id;
+					console.log("unit " + this.id[1] + " of player " + this.id[0] + " is selected");
+					unitborders[this.id[0]][this.id[1]].setAttrs({stroke: 'yellow'});
+
+					// in addition, if it is own unit, bring up the menu for move options, otherwise, hide it
+					if (selectedunit[0] === playernum) menugroup.show();
+					else menugroup.hide();
+					menugroup.draw();
+				}
 			}
 			unitLayer.draw();
 		});
@@ -327,6 +392,92 @@ function unitrefresh() {
 	unitLayer.draw();
 }
 unitrefresh();
+
+// resets unit selection
+function resetunitselection() {
+	if (selectedunit[0] != -1) {
+		unitborders[selectedunit[0]][selectedunit[1]].setAttrs({stroke: 'blue'});
+		selectedunit = [-1,-1];
+		unitLayer.draw();
+	}
+}
+
+
+// Selection layer
+var menugroup = new Kinetic.Group({x: 400, y: 160});
+var menubox = new Kinetic.Rect({
+	width: 210,
+	height: 140,
+	x: 0,
+	y: 0,
+	strokeWidth: 2,
+	fill: '#CCCCCC'
+});
+menugroup.add(menubox);
+
+// move button
+var movementButton = new Kinetic.Group({x: 5, y: 5});
+var movementButtonBox = new Kinetic.Rect({
+	width: 200,
+	height: 40,
+	x: 0,
+	y: 0,
+	stroke: 'black',
+	strokeWidth: 2,
+	fill: '#CCCCCC'
+});
+var movementButtonText = new Kinetic.Text({
+	x: movementButtonBox.width()/2,
+	y: movementButtonBox.height()/2,
+	text: 'move',
+	fontSize: 20,
+	fontFamily: 'Calibri',
+	fill: 'black'
+});
+movementButtonText.offset({x: movementButtonText.width()/2, y: movementButtonText.height()/2});
+movementButton.add(movementButtonBox);
+movementButton.add(movementButtonText);
+movementButtonText.moveToTop();
+menugroup.add(movementButton);
+
+// skill button
+var skillButton = new Kinetic.Group({x: 5, y: 50});
+var skillButtonBox = new Kinetic.Rect({
+	width: 200,
+	height: 40,
+	x: 0,
+	y: 0,
+	stroke: 'black',
+	strokeWidth: 2,
+	fill: '#CCCCCC'
+});
+var skillButtonText = new Kinetic.Text({
+	x: skillButtonBox.width()/2,
+	y: skillButtonBox.height()/2,
+	text: 'skill',
+	fontSize: 20,
+	fontFamily: 'Calibri',
+	fill: 'black'
+});
+skillButtonText.offset({x: skillButtonText.width()/2, y: skillButtonText.height()/2});
+skillButton.add(skillButtonBox);
+skillButton.add(skillButtonText);
+skillButtonText.moveToTop();
+menugroup.add(skillButton);
+
+
+menuLayer.add(menugroup);
+stage.add(menuLayer);	// add layer to stage
+menugroup.hide();
+
+// resets state and button border color
+function resetmenugroup() {
+	selectedaction = -1;
+	movementButtonBox.setAttrs({stroke: 'black'});
+	skillButtonBox.setAttrs({stroke: 'black'});
+}
+
+
 
 
 
@@ -367,13 +518,55 @@ confirmButton.on('click', function(evt) {
 	else socket.emit('readyup',{});
 });
 
+// movement button
+// once a unit is selected, the menu appears for this button
+// once clicked, clicking a tile will send an emit out to the server, indicating a move
+movementButton.on('mouseover', function() {
+	document.body.style.cursor = 'pointer';
+});
+movementButton.on('mouseout', function() {
+	document.body.style.cursor = 'default';
+});
+movementButton.on('click', function(evt) {
+	if (selectedaction === 0) {
+		resetmenugroup();
+	}
+	else {
+		selectedaction = 0;
+		movementButtonBox.setAttrs({stroke: 'yellow'});
+		skillButtonBox.setAttrs({stroke: 'black'});
+	}
+	menugroup.draw();
+});
+
+// skill button
+// once a unit is selected, the menu appears for this button
+// once clicked, clicking a tile or unit will send an emit out to the server, indicating a skill to be used
+skillButton.on('mouseover', function() {
+	document.body.style.cursor = 'pointer';
+});
+skillButton.on('mouseout', function() {
+	document.body.style.cursor = 'default';
+});
+skillButton.on('click', function(evt) {
+	if (selectedaction === 1) {
+		resetmenugroup();
+	}
+	else {
+		selectedaction = 1;
+		skillButtonBox.setAttrs({stroke: 'yellow'});
+		movementButtonBox.setAttrs({stroke: 'black'});
+	}
+	menugroup.draw();
+});
+
 
 
 // Server Events //
 
 // player is notified he is in the game
 socket.on('confirmlogin2', function(data) {
-	playernum = data.player;
+	playernum = parseInt(data.player);
 	console.log('you are player ' + playernum);
 	// connect button changes appearance accordingly
 	connectButtonBox.setAttrs({fill: '#66FF66'});
@@ -424,3 +617,24 @@ socket.on('yourturn', function(data) {
 	confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
 	overlayLayer.draw();
 });
+// receiving update of board state
+socket.on('update', function(data) {
+	console.log('received updated');
+	units = data.units;
+	unitrefresh();
+});
+
+
+
+// test functions
+
+// V socket.emit('playermove', {unit: 0, type: 'move', arg: {direction: [1,0]}});
+// V socket.emit('playermove', {unit: 1, type: 'move', arg: {direction: [-1,3]}});
+// V socket.emit('playermove', {unit: 3, type: 'skill', arg: {name: 'dicks'}});
+// V socket.emit('playermove', {unit: 4, type: 'skill', arg: {name: 405245}});
+// I socket.emit('playermove', {unit: 2, type: 'move', arg: {direction: [1,0,4]}});
+// I socket.emit('playermove', {unit: 3, type: 'move', arg: {name: 'hi'}});
+// I socket.emit('playermove', {unit: 0, type: 'skill', arg: {direction: [1,0]}});
+// I socket.emit('playermove', {unit: 5, type: 'move', arg: {direction: [1,0]}});
+// I socket.emit('playermove', {type: 'move', arg: {direction: [1,0]}});
+// I socket.emit('playermove', {unit: 2, type: 'move'});
