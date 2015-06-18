@@ -1,58 +1,14 @@
-// Window setup //
-var windowWidth = 800,
-	windowHeight = 600;
-var stage = new Kinetic.Stage({
-	container: 'container',
-	width: windowWidth,
-	height: windowHeight
-});
-
-// Images //
-//
-var imgsources = {
-	tile: 'img/tile.png',
-	wall: 'img/wall.png',
-	grass: 'img/grass.png',
-	spritesheet: 'img/spritesheet.png'
-};
-var images = {};
-function preloadGameImages() {
-	for (var src in imgsources) {
-		images[src] = new Image();
-		images[src].src = imgsources[src];
-		images[src].onload = function() {
-			stage.draw();
-		}
-	}
-	console.log("all images loaded");
-}
-preloadGameImages();
-
-// Sprite locations of the pokemon sprite sheet
-var spriteloc = [
-	{x: 6, y: 7, width: 64, height: 64},	// 0
-	{x: 88, y: 8, width: 64, height: 64},
-	{x: 166, y: 9, width: 64, height: 64},
-	{x: 252, y: 10, width: 64, height: 64},
-	{x: 326, y: 10, width: 64, height: 64},
-	{x: 6, y: 97, width: 64, height: 64},	// 5
-	{x: 90, y: 93, width: 64, height: 64},
-	{x: 170, y: 88, width: 64, height: 64},
-	{x: 253, y: 86, width: 64, height: 64},
-	{x: 330, y: 85, width: 64, height: 64}
-];
-
-
-
 // Client variables
 var selectedunit = [-1,-1];
 var selectedtile = [-1,-1];
+var gamestarted = false;
+var playernum = -1;
+var currentturn = 0;
 
 
 // Game state variables //
-
 var units = [];
-units[0] = [
+units[1] = [
 	{
 		id: 0,
 		position: [0,0]
@@ -74,7 +30,7 @@ units[0] = [
 		position: [0,4]
 	}
 ];
-units[1] = [
+units[2] = [
 	{
 		id: 5,
 		position: [4,0]
@@ -99,16 +55,33 @@ units[1] = [
 
 
 
+// Layers //
+
+// these layers should be in this display order from top to bottom
+var overlayLayer = new Kinetic.Layer(); 	// draws buttons and info
+var unitLayer = new Kinetic.Layer();	// draws the units
+var tileLayer = new Kinetic.Layer();	// draws the tiles
+var bgLayer = new Kinetic.Layer();	// draws bg
 
 
 
+// background
+var bg = new Kinetic.Rect({
+	width: windowWidth,
+	height: windowHeight,
+	x: 0,
+	y: 0,
+	strokeWidth: 0,
+	fill: '#EEEEEE'
+});
+bgLayer.add(bg);
+stage.add(bgLayer);	// add layer to stage
 
-// Layers
-var tileLayer = new Kinetic.Layer();
-var unitLayer = new Kinetic.Layer();
-var overlayLayer = new Kinetic.Layer();
+
 
 // Overlay
+
+// connection button
 var connectButton = new Kinetic.Group({x: 400, y: 1});
 var connectButtonBox = new Kinetic.Rect({
 	width: 200,
@@ -132,40 +105,60 @@ connectButton.add(connectButtonBox);
 connectButton.add(connectButtonText);
 connectButtonText.moveToTop();
 overlayLayer.add(connectButton);
-stage.add(overlayLayer);
 
-// code for buttons
-connectButton.on('mouseover', function() {
-	document.body.style.cursor = 'pointer';
+var connectButton = new Kinetic.Group({x: 400, y: 1});
+var connectButtonBox = new Kinetic.Rect({
+	width: 200,
+	height: 40,
+	x: 0,
+	y: 0,
+	stroke: 'black',
+	strokeWidth: 2,
+	fill: '#CCCCCC'
 });
-connectButton.on('mouseout', function() {
-	document.body.style.cursor = 'default';
+var connectButtonText = new Kinetic.Text({
+	x: connectButtonBox.width()/2,
+	y: connectButtonBox.height()/2,
+	text: 'not connected',
+	fontSize: 20,
+	fontFamily: 'Calibri',
+	fill: 'black'
 });
+connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
+connectButton.add(connectButtonBox);
+connectButton.add(connectButtonText);
+connectButtonText.moveToTop();
+overlayLayer.add(connectButton);
 
-socket.on('confirmlogin2', function(data) {
-	connectButtonBox.setAttrs({fill: 'green'});
-	connectButtonText.setAttrs({text: 'you are player ' + (data.player)});
-	connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
-	console.log('you are player ' + (data.player));
-	overlayLayer.draw();
+// confirm button
+var confirmButton = new Kinetic.Group({x: 400, y: 100});
+var confirmButtonBox = new Kinetic.Rect({
+	width: 200,
+	height: 40,
+	x: 0,
+	y: 0,
+	stroke: 'black',
+	strokeWidth: 2,
+	fill: '#CCCCCC'
 });
-
-connectButton.on('click', function(evt) {
-	console.log("Clicked"); 
-	socket.emit('confirmlogin',{});
+var confirmButtonText = new Kinetic.Text({
+	x: confirmButtonBox.width()/2,
+	y: confirmButtonBox.height()/2,
+	text: 'ready',
+	fontSize: 20,
+	fontFamily: 'Calibri',
+	fill: 'black'
 });
+confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+confirmButton.add(confirmButtonBox);
+confirmButton.add(confirmButtonText);
+confirmButtonText.moveToTop();
+overlayLayer.add(confirmButton);
+
+stage.add(overlayLayer);	// add layer to stage
 
 
-socket.on('playersfull', function(data) {
-	connectButtonBox.setAttrs({fill: 'red'});
-	connectButtonText.setAttrs({text: 'server is full'});
-	connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
-	console.log('server is full');
-	overlayLayer.draw();
-});
-
-
-// Board setup
+// Board Setup //
 var tilegroup = new Kinetic.Group({
 	x: boardstartx,
 	y: boardstarty
@@ -206,12 +199,15 @@ for (var x = 0; x < mapx; x++) {
 			document.body.style.cursor = 'default';
 		});
 		boardtiles[x][y].on('click', function(evt) {
+			// if a tile clicked is already highlighted, un-highlight it
 			if (selectedtile == this.id) {
 				selectedtile = [-1,-1];
 				console.log("no tile selected");
 				tileborders[this.id[0]][this.id[1]].setAttrs({stroke: 'black'});
 			}
+			// if a tile is clicked, highlight it (and un-highlight the previously selected unit)
 			else {
+				if (!selectedtile == [-1,-1]) tileborders[selectedtile[0]][selectedtile[1]].setAttrs({stroke: 'black'});
 				selectedtile = this.id;
 				console.log("the tile " + this.id + " is selected");
 				tileborders[this.id[0]][this.id[1]].setAttrs({stroke: 'yellow'});
@@ -224,8 +220,9 @@ for (var x = 0; x < mapx; x++) {
 	}
 }
 tileLayer.add(tilegroup);
-stage.add(tileLayer);
+stage.add(tileLayer);	// add layer to stage
 
+// refreshes the tile images and redraws them
 function boardrefresh() {
 	for (var x = 0; x <= mapx; x++) {
 		for (var y = 0; y <= mapy; y++) {
@@ -243,17 +240,17 @@ function boardrefresh() {
 }
 boardrefresh();
 
-// Draw units
+// Draw Units //
 var unitborders = [];
-unitborders[0] = [];
 unitborders[1] = [];
+unitborders[2] = [];
 var unitimages = [];
-unitimages[0] = [];
 unitimages[1] = [];
-for (var p = 0; p < 2; p++) {
+unitimages[2] = [];
+for (var p = 1; p <= 2; p++) {
 	for (var n = 0; n < 5; n++) {
 		unitborders[p][n] = new Kinetic.Rect({
-			x: boardstartx+(p*4)*tilesize+1,
+			x: boardstartx+((p-1)*4)*tilesize+1,
 			y: boardstarty+n*tilesize+1,
 			width: tilesize-2,
 			height: tilesize-2,
@@ -261,7 +258,7 @@ for (var p = 0; p < 2; p++) {
 			strokeWidth: 1
 		});
 		unitimages[p][n] = new Kinetic.Image({
-			x: boardstartx+(p*4)*tilesize,
+			x: boardstartx+((p-1)*4)*tilesize,
 			y: boardstarty+n*tilesize,
 			image: images.spritesheet,
 			width: tilesize,
@@ -283,11 +280,13 @@ for (var p = 0; p < 2; p++) {
 			document.body.style.cursor = 'default';
 		});
 		unitimages[p][n].on('click', function(evt) {
+			// if a unit clicked is already highlighted, un-highlight it
 			if (selectedunit == this.id) {
 				selectedunit = [-1,-1];
 				console.log("no unit selected");
 				unitborders[this.id[0]][this.id[1]].setAttrs({stroke: 'blue'});
 			}
+			// if a unit is clicked, highlight it (and un-highlight the previously selected unit)
 			else {
 				selectedunit = this.id;
 				console.log("unit " + this.id[1] + " of player " + (this.id[0]+1) + " is selected");
@@ -300,10 +299,11 @@ for (var p = 0; p < 2; p++) {
 		unitLayer.add(unitimages[p][n]);
 	}
 }
-stage.add(unitLayer);
+stage.add(unitLayer);	// add layer to stage
 
+// refreshes the unit images and redraws them
 function unitrefresh() {
-	for (var p = 0; p < 2; p++) {
+	for (var p = 1; p <= 2; p++) {
 		for (var n = 0; n < 5; n++) {
 			if (unitimages[p][n]) {
 				if (unitimages[p][n]) {
@@ -330,11 +330,97 @@ unitrefresh();
 
 
 
-// Socket commands to communicate with server
-// emit - send to server
-// on - executes on receiving from server
+// Button Code //
 
-//socket.emit('talk', {'string': "HI SHELLEY!"});
+// connect button
+// when a player connects to the server, this button puts the player into the game (assuming server isn't full)
+connectButton.on('mouseover', function() {
+	document.body.style.cursor = 'pointer';
+});
+connectButton.on('mouseout', function() {
+	document.body.style.cursor = 'default';
+});
+connectButton.on('click', function(evt) {
+	if (playernum == -1) socket.emit('confirmlogin',{});
+});
+
+// confirm button
+// after a player is in the game, this button lets the server know the player is ready to start the game
+// after game has started, the button ends the player's turn (if it is his turn)
+confirmButton.on('mouseover', function() {
+	document.body.style.cursor = 'pointer';
+});
+confirmButton.on('mouseout', function() {
+	document.body.style.cursor = 'default';
+});
+confirmButton.on('click', function(evt) {
+	if (gamestarted && playernum == currentturn) {
+		socket.emit('endturn', {});
+		console.log("it is not your turn");
+		
+		currentturn = (playernum == 1 ? 2 : 1);
+
+		confirmButtonText.setAttrs({text: "opponent's turn"});
+		confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+		overlayLayer.draw();
+	}
+	else socket.emit('readyup',{});
+});
+
+
+
+// Server Events //
+
+// player is notified he is in the game
+socket.on('confirmlogin2', function(data) {
+	playernum = data.player;
+	console.log('you are player ' + playernum);
+	// connect button changes appearance accordingly
+	connectButtonBox.setAttrs({fill: '#66FF66'});
+	connectButtonText.setAttrs({text: 'you are player ' + (data.player)});
+	connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
+	overlayLayer.draw();
+});
+// player is notified that server is full
 socket.on('playersfull', function(data) {
-	console.log('Server is full.');
+	// connect button changes appearance accordingly
+	connectButtonBox.setAttrs({fill: '#FF6666'});
+	connectButtonText.setAttrs({text: 'server is full'});
+	connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
+	console.log('server is full');
+	overlayLayer.draw();
+});
+
+// game has started
+socket.on('startgame', function(data) {
+	console.log('game started');
+	gamestarted = true;
+	// lets player know whose turn it is
+	if (playernum == data.playerturn) {
+		currentturn = playernum;
+		
+		console.log("it is your turn");
+		// changes text of confirm button accordingly
+		confirmButtonText.setAttrs({text: 'end turn'});
+	}
+	else {
+		currentturn = (playernum == 1 ? 2 : 1);
+		
+		console.log("it is not your turn");		
+		// changes text of confirm button accordingly
+		confirmButtonText.setAttrs({text: "opponent's turn"});
+	}
+	confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+	
+	overlayLayer.draw();
+});
+// notifies player it is his turn
+socket.on('yourturn', function(data) {
+	console.log("it is your turn");
+	currentturn = playernum;
+	
+	// changes text of confirm button accordingly
+	confirmButtonText.setAttrs({text: 'end turn'});
+	confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+	overlayLayer.draw();
 });
