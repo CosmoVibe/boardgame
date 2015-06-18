@@ -1,3 +1,4 @@
+//function for comparing arrays
 Array.prototype.equals = function (array) {
     // if the other array is a falsy value, return
     if (!array)
@@ -37,10 +38,11 @@ var nextUserID = 1;
 var p1;
 var p2;
 var currentturn = 0;	// 0 means game is not underway, 1 means it is p1's turn, 2 means it is p2's turn
-var ready = 0; 
+var ready = 0;			//keep track of when game has started. when ready == 2, game has started
 
 //Holds the movements of both players of the game
 var units = [];
+//player 1 units
 units[1] = [
     {
         id: 0,
@@ -63,6 +65,7 @@ units[1] = [
         position: [0,4]
     }
 ];
+//player 2 units
 units[2] = [
     {
         id: 5,
@@ -85,9 +88,6 @@ units[2] = [
         position: [4,4]
     }
 ];
-
-
-
 
 // socket connection
 io.sockets.on('connection', function(socket) {
@@ -178,19 +178,17 @@ io.sockets.on('connection', function(socket) {
 			return false; 
 		}
 
+		//make sure the position is between [0, 0] and [4, 4]
 		function isValidPosition(position) {
 			return ((position[0] >= 0) && (position[1] >= 0) && (position[0] <= 4) && (position[1] <= 4));	
 		}
 
+		//ensure there are no collisions
 		function isOverlapping(position){
 			for (i = 0; i < units[1].length; i++)
 			{
-				//console.log(i + ": position: " + position); 
-				//console.log("units[1]" + "[" + i + "] = " + units[1][i].position);
-				//console.log("units[2]" + "[" + i + "] = " + units[2][i].position);  
 				if ((units[1][i].position.equals(position)) || (units[2][i].position.equals(position)))
-				{
-					console.log("Collision with unit " + i + " at position " + position); 
+				{ 
 					return true; 
 				}
 			}
@@ -258,6 +256,7 @@ io.sockets.on('connection', function(socket) {
 							else
 							{
 								console.log("New position is " + newPosition);
+								//let both players know what the move was
 								liveSockets[p1].emit('update', {'units': units});
 								liveSockets[p2].emit('update', {'units': units});  
 							}
