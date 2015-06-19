@@ -43,7 +43,7 @@ function tileclick(id) {
 			menugroup.hide();
 			menuLayer.draw();
 
-			if (selectedtile[0] != -1) tileborders[selectedtile[0]][selectedtile[1]].setAttrs({stroke: 'black'});
+			resettileselection();
 			selectedtile = id;
 			console.log("the tile " + id + " is selected");
 			tileborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
@@ -72,11 +72,12 @@ function unitclick(id) {
 		// if a unit is clicked, highlight it (and un-highlight the previously selected unit or tile)
 		else {
 			resettileselection();
-			
-			if (selectedunit[0] != -1) unitborders[selectedunit[0]][selectedunit[1]].setAttrs({stroke: 'blue'});
+			resetunitselection();
+
 			selectedunit = id;
 			console.log("unit " + id[1] + " of player " + id[0] + " is selected");
 			unitborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
+			uniticonborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 
 			// in addition, if it is own unit, bring up the menu for move options, otherwise, hide it
 			if (selectedunit[0] === playernum) {
@@ -84,7 +85,7 @@ function unitclick(id) {
 				resetmenugroup();
 			}
 			else menugroup.hide();
-			menugroup.draw();
+			menuLayer.draw();
 		}
 	}
 	unitLayer.draw();
@@ -121,9 +122,13 @@ confirmButton.on('click', function(evt) {
 
 		confirmButtonText.setAttrs({text: "opponent's turn"});
 		confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
-		overlayLayer.draw();
 	}
-	else socket.emit('readyup',{});
+	else {
+		socket.emit('readyup',{});
+		confirmButtonText.setAttrs({text: "ready"});
+		confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+	}
+	overlayLayer.draw();
 });
 
 // movement button
@@ -180,6 +185,10 @@ socket.on('confirmlogin2', function(data) {
 	connectButtonBox.setAttrs({fill: '#66FF66'});
 	connectButtonText.setAttrs({text: 'you are player ' + (data.player)});
 	connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
+	// confirm button changes appearance accordingly
+	confirmButtonText.setAttrs({text: "click to ready"});
+	confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+
 	overlayLayer.draw();
 });
 // player is notified that server is full
@@ -232,18 +241,3 @@ socket.on('update', function(data) {
 	units = data.units;
 	unitrefresh();
 });
-
-
-
-// test functions
-
-// V socket.emit('playermove', {unit: 0, type: 'move', arg: {direction: [1,0]}});
-// V socket.emit('playermove', {unit: 1, type: 'move', arg: {direction: [-1,3]}});
-// V socket.emit('playermove', {unit: 3, type: 'skill', arg: {name: 'dicks'}});
-// V socket.emit('playermove', {unit: 4, type: 'skill', arg: {name: 405245}});
-// I socket.emit('playermove', {unit: 2, type: 'move', arg: {direction: [1,0,4]}});
-// I socket.emit('playermove', {unit: 3, type: 'move', arg: {name: 'hi'}});
-// I socket.emit('playermove', {unit: 0, type: 'skill', arg: {direction: [1,0]}});
-// I socket.emit('playermove', {unit: 5, type: 'move', arg: {direction: [1,0]}});
-// I socket.emit('playermove', {type: 'move', arg: {direction: [1,0]}});
-// I socket.emit('playermove', {unit: 2, type: 'move'});

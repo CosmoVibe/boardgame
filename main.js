@@ -11,45 +11,84 @@ var selectedaction = -1;	// 0 means movement, 1+ means skill
 var units = [];
 units[1] = [
 	{
-		id: 0,
-		position: [0,0]
+		id: 0,	// fighter
+		position: [0,0],
+		name: 'fighter',
+		maxhp: 200,
+		hp: 200,
+		strength: 40,
+		maxenergy: 3,
+		energy: 3,
+		movecost: 1,
+		skills: {
+			attack: {
+				cost: 1,
+				target: 'enemy unit',
+				range: function(dir) {
+					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
+					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
+					else return false;
+				},
+				action: [
+					{
+						type: 'damage',
+						ratio: 1
+					}
+				]
+			},
+			bash: {
+				cost: 3,
+				target: 'enemy unit',
+				range: function(dir) {
+					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
+					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
+					else return false;
+				},
+				action: [
+					{
+						type: 'damage',
+						ratio: 2.5
+					}
+				]
+			},
+		}
 	},
 	{
-		id: 1,
+		id: 1,	// rogue
 		position: [0,1]
 	},
 	{
-		id: 2,
+		id: 2,	// tank
 		position: [0,2]
 	},
 	{
-		id: 3,
+		id: 3,	// mage
 		position: [0,3]
 	},
 	{
-		id: 4,
+		id: 4,	// support
 		position: [0,4]
 	}
 ];
 units[2] = [
 	{
-		id: 5,
+		id: 2,
 		position: [4,0]
 	},
 	{
-		id: 6,
+		id: 1,
 		position: [4,1]
 	},
 	{
-		id: 7,
+		id: 0,
 		position: [4,2]
 	},
 	{
-		id: 8,
+		id: 4,
 		position: [4,3]
 	},
 	{
-		id: 9,
+		id: 3,
 		position: [4,4]
 	}
 ];
@@ -59,7 +98,8 @@ units[2] = [
 // Layers //
 
 // these layers should be in this display order from top to bottom
-var menuLayer = new Kinetic.Layer();	// draws meun box that holds button where players choose what the unit does
+var infoLayer = new Kinetic.Layer(); 	// draws buttons and info
+var menuLayer = new Kinetic.Layer();	// draws menu box that holds button where players choose what the unit does
 var overlayLayer = new Kinetic.Layer(); 	// draws buttons and info
 var unitLayer = new Kinetic.Layer();	// draws the units
 var tileLayer = new Kinetic.Layer();	// draws the tiles
@@ -84,34 +124,10 @@ stage.add(bgLayer);	// add layer to stage
 // Overlay
 
 // connection button
-var connectButton = new Kinetic.Group({x: 400, y: 1});
+var connectButton = new Kinetic.Group({x: 340, y: 10});
 var connectButtonBox = new Kinetic.Rect({
-	width: 200,
-	height: 40,
-	x: 0,
-	y: 0,
-	stroke: 'black',
-	strokeWidth: 2,
-	fill: '#CCCCCC'
-});
-var connectButtonText = new Kinetic.Text({
-	x: connectButtonBox.width()/2,
-	y: connectButtonBox.height()/2,
-	text: 'not connected',
-	fontSize: 20,
-	fontFamily: 'Calibri',
-	fill: 'black'
-});
-connectButtonText.offset({x: connectButtonText.width()/2, y: connectButtonText.height()/2});
-connectButton.add(connectButtonBox);
-connectButton.add(connectButtonText);
-connectButtonText.moveToTop();
-overlayLayer.add(connectButton);
-
-var connectButton = new Kinetic.Group({x: 400, y: 1});
-var connectButtonBox = new Kinetic.Rect({
-	width: 200,
-	height: 40,
+	width: 220,
+	height: 30,
 	x: 0,
 	y: 0,
 	stroke: 'black',
@@ -133,10 +149,10 @@ connectButtonText.moveToTop();
 overlayLayer.add(connectButton);
 
 // confirm button
-var confirmButton = new Kinetic.Group({x: 400, y: 50});
+var confirmButton = new Kinetic.Group({x: 570, y: 10});
 var confirmButtonBox = new Kinetic.Rect({
-	width: 200,
-	height: 40,
+	width: 220,
+	height: 30,
 	x: 0,
 	y: 0,
 	stroke: 'black',
@@ -146,7 +162,7 @@ var confirmButtonBox = new Kinetic.Rect({
 var confirmButtonText = new Kinetic.Text({
 	x: confirmButtonBox.width()/2,
 	y: confirmButtonBox.height()/2,
-	text: 'ready',
+	text: '-',
 	fontSize: 20,
 	fontFamily: 'Calibri',
 	fill: 'black'
@@ -161,14 +177,14 @@ stage.add(overlayLayer);	// add layer to stage
 
 
 // Board Setup //
+var boardstartx = 10;
+var boardstarty = 10;
 var tilegroup = new Kinetic.Group({
 	x: boardstartx,
 	y: boardstarty
 });
 var mapx = 5;
 var mapy = 5;
-var boardstartx = 10;
-var boardstarty = 10;
 var tilesize = 64;
 var boardtiles = [];
 var tileborders = [];
@@ -177,16 +193,16 @@ for (var x = 0; x < mapx; x++) {
 	tileborders[x] = [];
 	for (var y = 0; y < mapy; y++) {
 		tileborders[x][y] = new Kinetic.Rect({
-			x: boardstartx+x*tilesize,
-			y: boardstarty+y*tilesize,
+			x: x*tilesize,
+			y: y*tilesize,
 			width: tilesize,
 			height: tilesize,
 			stroke: 'black',
 			strokeWidth: 1
 		});
 		boardtiles[x][y] = new Kinetic.Image({
-			x: boardstartx+x*tilesize,
-			y: boardstarty+y*tilesize,
+			x: x*tilesize,
+			y: y*tilesize,
 			image: new Image(),
 			width: tilesize,
 			height: tilesize
@@ -241,14 +257,30 @@ function resettileselection() {
 
 
 // Draw Units //
+
+// units on the board
 var unitborders = [];
 unitborders[1] = [];
 unitborders[2] = [];
 var unitimages = [];
 unitimages[1] = [];
 unitimages[2] = [];
+// unit icons for info
+var uniticonborders = [];
+uniticonborders[1] = [];
+uniticonborders[2] = [];
+var uniticonimages = [];
+uniticonimages[1] = [];
+uniticonimages[2] = [];
+// unit overall button
+var unitbuttons = [];
+unitbuttons[1] = [];
+unitbuttons[2] = [];
+
 for (var p = 1; p <= 2; p++) {
 	for (var n = 0; n < 5; n++) {
+		unitbuttons[p][n] = new Kinetic.Group({});
+		
 		unitborders[p][n] = new Kinetic.Rect({
 			x: boardstartx+((p-1)*4)*tilesize+1,
 			y: boardstarty+n*tilesize+1,
@@ -270,22 +302,49 @@ for (var p = 1; p <= 2; p++) {
 				height: 64
 			}
 		});
-		unitimages[p][n].id = [p,n];	// we use this to help us figure out which unit is being clicked (see below)
+		
+		uniticonborders[p][n] = new Kinetic.Rect({
+			x: 340+n*(tilesize+10),
+			y: 50+(p-1)*(tilesize+10),
+			width: tilesize,
+			height: tilesize,
+			stroke: 'blue',
+			strokeWidth: 2
+		});
+		uniticonimages[p][n] = new Kinetic.Image({
+			x: 340+n*(tilesize+10),
+			y: 50+(p-1)*(tilesize+10),
+			image: images.spritesheet,
+			width: tilesize,
+			height: tilesize,
+			crop: {
+				x: 64*n,
+				y: 64*n,
+				width: 64,
+				height: 64
+			}
+		});
 
+		unitbuttons[p][n].add(unitborders[p][n]);
+		unitbuttons[p][n].add(unitimages[p][n]);
+		unitbuttons[p][n].add(uniticonborders[p][n]);
+		unitbuttons[p][n].add(uniticonimages[p][n]);
+		unitbuttons[p][n].id = [p,n];	// we use this to help us figure out which unit is being clicked (see below)
+		
+		
 		// code for buttons
-		unitimages[p][n].on('mouseover', function() {
+		unitbuttons[p][n].on('mouseover', function() {
 			document.body.style.cursor = 'pointer';
 		});
-		unitimages[p][n].on('mouseout', function() {
+		unitbuttons[p][n].on('mouseout', function() {
 			document.body.style.cursor = 'default';
 		});
 		// at some point, we need to put this in a function to move the code somewhere that makes more sense
-		unitimages[p][n].on('click', function(evt) {
+		unitbuttons[p][n].on('click', function(evt) {
 			unitclick(this.id);
 		});
 		
-		unitLayer.add(unitborders[p][n]);
-		unitLayer.add(unitimages[p][n]);
+		unitLayer.add(unitbuttons[p][n]);
 	}
 }
 stage.add(unitLayer);	// add layer to stage
@@ -308,7 +367,8 @@ function unitrefresh() {
 						y: boardstarty + units[p][n].position[1]*tilesize
 					});
 					// change sprite
-					unitimages[p][n].setAttrs({crop: spriteloc[units[p][n].id]});
+					unitimages[p][n].setAttrs({crop: idsprite(units[p][n].id)});
+					uniticonimages[p][n].setAttrs({crop: idsprite(units[p][n].id)});
 				}
 			}
 		}
@@ -321,6 +381,7 @@ unitrefresh();
 function resetunitselection() {
 	if (selectedunit[0] != -1) {
 		unitborders[selectedunit[0]][selectedunit[1]].setAttrs({stroke: 'blue'});
+		uniticonborders[selectedunit[0]][selectedunit[1]].setAttrs({stroke: 'blue'});
 		selectedunit = [-1,-1];
 		unitLayer.draw();
 	}
@@ -328,10 +389,10 @@ function resetunitselection() {
 
 
 // Selection layer
-var menugroup = new Kinetic.Group({x: 400, y: 160});
+var menugroup = new Kinetic.Group({x: 340, y: 198});
 var menubox = new Kinetic.Rect({
-	width: 210,
-	height: 140,
+	width: 450,
+	height: 330-198,
 	x: 0,
 	y: 0,
 	strokeWidth: 2,
@@ -340,9 +401,9 @@ var menubox = new Kinetic.Rect({
 menugroup.add(menubox);
 
 // move button
-var movementButton = new Kinetic.Group({x: 5, y: 5});
+var movementButton = new Kinetic.Group({x: 3, y: 3});
 var movementButtonBox = new Kinetic.Rect({
-	width: 200,
+	width: 220,
 	height: 40,
 	x: 0,
 	y: 0,
@@ -365,9 +426,9 @@ movementButtonText.moveToTop();
 menugroup.add(movementButton);
 
 // skill button
-var skillButton = new Kinetic.Group({x: 5, y: 50});
+var skillButton = new Kinetic.Group({x: 3, y: 3+40+3});
 var skillButtonBox = new Kinetic.Rect({
-	width: 200,
+	width: 220,
 	height: 40,
 	x: 0,
 	y: 0,
