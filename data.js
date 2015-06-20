@@ -39,6 +39,7 @@ var spriteloc = {
 	nidoqueen: {x: 170, y: 88, width: 64, height: 64},
 	nidoranm: {x: 253, y: 86, width: 64, height: 64},
 	nidorino: {x: 330, y: 85, width: 64, height: 64},
+	machamp: {x: 890, y: 159, width: 64, height: 64},
 	scizor: {x: 1205, y: 565, width: 64, height: 64},
 	mismagius: {x: 655, y: 1205, width: 64, height: 64},
 	weavile: {x: 960, y: 1285, width: 64, height: 64},
@@ -64,7 +65,7 @@ function idsprite(id) {
 			return spriteloc.cresselia;
 			break;
 		case 5:
-			return spriteloc.bulbasaur;
+			return spriteloc.machamp;
 			break;
 		case 6:
 			return spriteloc.bulbasaur;

@@ -22,10 +22,13 @@ function tileclick(id) {
 		resetmenugroup();
 		menugroup.hide();
 		menuLayer.draw();
-		
+
 		resettileselection();
+		resethighlightedtiles();
 		
 		resetunitselection();
+		
+		hideInfo();
 		
 	}
 	// if there is no selected action taking place
@@ -38,10 +41,13 @@ function tileclick(id) {
 		else {
 			resetunitselection();
 			
-			// if unit was selected, but move choice was not, hide menu group
+			// update interface
 			resetmenugroup();
 			menugroup.hide();
 			menuLayer.draw();
+			hideInfo();
+			
+			resethighlightedtiles();
 
 			resettileselection();
 			selectedtile = id;
@@ -64,10 +70,11 @@ function unitclick(id) {
 		if (selectedunit == id) {
 			console.log("no unit selected");
 			resetunitselection();
-			// in addition, remove the menu for move options
+			// in addition, update interface
 			resetmenugroup();
 			menugroup.hide();
 			menuLayer.draw();
+			hideInfo();
 		}
 		// if a unit is clicked, highlight it (and un-highlight the previously selected unit or tile)
 		else {
@@ -78,7 +85,8 @@ function unitclick(id) {
 			console.log("unit " + id[1] + " of player " + id[0] + " is selected");
 			unitborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 			uniticonborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
-
+			showInfo();
+			
 			// in addition, if it is own unit, bring up the menu for move options, otherwise, hide it
 			if (selectedunit[0] === playernum) {
 				menugroup.show();
@@ -143,12 +151,24 @@ movementButton.on('mouseout', function() {
 movementButton.on('click', function(evt) {
 	if (selectedaction === 0) {
 		resetmenugroup();
+		resethighlightedtiles();
 	}
 	else {
 		selectedaction = 0;
 		movementButtonBox.setAttrs({stroke: 'yellow'});
 		skillButtonBox.setAttrs({stroke: 'black'});
+		// in case this button is clicked without a unit selected
+		if (selectedunit[0] != -1) {
+			// highlight all of the available move locations
+			var x = units[selectedunit[0]][selectedunit[1]].position[0];
+			var y = units[selectedunit[0]][selectedunit[1]].position[1];
+			if (!occupied(x+1,y)) highlighttile(x+1,y, 'yellow');
+			if (!occupied(x-1,y)) highlighttile(x-1,y, 'yellow');
+			if (!occupied(x,y+1)) highlighttile(x,y+1, 'yellow');
+			if (!occupied(x,y-1)) highlighttile(x,y-1, 'yellow');
+		}
 	}
+	tileLayer.draw();
 	menugroup.draw();
 });
 
@@ -164,12 +184,23 @@ skillButton.on('mouseout', function() {
 skillButton.on('click', function(evt) {
 	if (selectedaction === 1) {
 		resetmenugroup();
+		resethighlightedtiles();
 	}
 	else {
 		selectedaction = 1;
 		skillButtonBox.setAttrs({stroke: 'yellow'});
 		movementButtonBox.setAttrs({stroke: 'black'});
+		if (selectedunit[0] != -1) {
+			// highlight all of the available move locations
+			var x = units[selectedunit[0]][selectedunit[1]].position[0];
+			var y = units[selectedunit[0]][selectedunit[1]].position[1];
+			if (occupied(x+1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x+1,y, 'red');
+			if (occupied(x-1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x-1,y, 'red');
+			if (occupied(x,y+1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y+1, 'red');
+			if (occupied(x,y-1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y-1, 'red');
+		}
 	}
+	tileLayer.draw();
 	menugroup.draw();
 });
 
@@ -241,3 +272,18 @@ socket.on('update', function(data) {
 	units = data.units;
 	unitrefresh();
 });
+
+
+
+
+// game helper methods
+
+// determines whether or not the tile is occupied by a character
+// returns 0 for no character, 1 for a character of player 1, and 2 for a character of player 2
+function occupied(x,y) {
+	for (var k = 0; k < 5; k++) {
+		if (units[1][k].position[0] === x && units[1][k].position[1] === y) return 1;
+		else if (units[2][k].position[0] === x && units[2][k].position[1] === y) return 2;
+	}
+	return 0;
+}
