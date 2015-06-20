@@ -45,9 +45,47 @@ var units = [];
 //player 1 units
 units[1] = [
     {
-        id: 0,
-        position: [0,0]
-    },
+		id: 0,	// fighter
+		position: [0,0],
+		name: 'fighter',
+		maxhp: 200,
+		hp: 200,
+		strength: 40,
+		maxEnergy: 100,
+		energy: 3,
+		movecost: 1,
+		skills: {
+			attack: {
+				cost: 1,
+				target: 0,	//integer of the other player
+				range: function(dir) {
+					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
+					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
+					else return false;
+				},
+				action: [
+					{
+						type: 'damage',
+						ratio: 1
+					}
+				]
+			},
+			bash: {
+				cost: 3,
+				range: function(dir) {
+					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
+					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
+					else return false;
+				},
+				action: [
+					{
+						type: 'damage',
+						ratio: 2.5
+					}
+				]
+			},
+		}
+	},
     {
         id: 1,
         position: [0,1]
@@ -222,6 +260,46 @@ io.sockets.on('connection', function(socket) {
 			return newPosition; 
 		}
 
+		//checks movement's energy level and movement cost level to see if it can move
+		function hasMoveEnergy(unit)
+		{
+			if (unit.energy >= unit.movecost)
+			{
+				console.log("Movement granted");
+				unit.energy = unit.energy - unit.movecost;
+				return true;  
+			}
+			else
+			{
+				console.log("You don't have enough energy to move!");
+				return false; 
+			}
+		}
+
+		//make sure it's the player's turn
+		function isPlayersTurn(userID, currentturn)
+		{
+			return (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)));
+		}
+
+		//make sure it's a valid player move
+		function isValidPlayerMove(data)
+		{
+			return ((data.unit != null) && ((data.type == 'move') || (data.type == 'skill')));
+		}
+
+		//has valid direction
+		function hasValidDirection(data)
+		{
+			return ((data.arg) && (data.arg.direction != null)); 
+		}
+
+		//is valid skill
+		function isValidSkill(data)
+		{
+			return ((data.arg) && (data.arg.name != null)); 	
+		}
+
 		//movement variables
 		var unit; 
 		var type;
@@ -229,63 +307,72 @@ io.sockets.on('connection', function(socket) {
 		var name; 
 
 		//check for player's turn
-		if (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)))
+		if (isPlayersTurn(userID, currentturn))
 		{
 			//check for invalid move
-			if ((data.unit == null) || ((data.type != 'move') && (data.type != 'skill')))
+			if (!isValidPlayerMove(data))
 			{
 				console.log("Invalid player move");
 			}
 			else
 			{
 				//check move type
-				if (data.type == 'move')
+				switch (data.type)
 				{
-					//make sure there's a valid direction
-					if ((data.arg) && (data.arg.direction != null))
+					case ('move'):
 					{
-						if (isValidDirection(data.arg.direction))
+						//has enough energy
+						if (hasMoveEnergy(data.unit))
 						{
-							direction = data.arg.direction;
-							unit = data.unit; 
-							var newPosition = movePosition(data.arg.direction, unit);  
-							if (!isValidPosition(newPosition))
+							//make sure there's a valid direction
+							if (hasValidDirection(data))
 							{
-								console.log("Invalid move! Your piece moved off the board!"); 
+								if (isValidDirection(data.arg.direction))
+								{
+									direction = data.arg.direction;
+									var newPosition = movePosition(data.arg.direction, data.unit);  
+									if (!isValidPosition(newPosition))
+									{
+										console.log("Invalid move! Your piece moved off the board!"); 
+									}
+									else
+									{
+										console.log("New position is " + newPosition);
+										//let both players know what the move was
+										liveSockets[p1].emit('update', {'units': units});
+										liveSockets[p2].emit('update', {'units': units});  
+									}
+								}
+								else
+									console.log("Your direction isn't up, down, left, or right."); 
 							}
-							else
-							{
-								console.log("New position is " + newPosition);
-								//let both players know what the move was
-								liveSockets[p1].emit('update', {'units': units});
-								liveSockets[p2].emit('update', {'units': units});  
-							}
+							else 
+								console.log("Direction is null!"); 
 						}
-						else
-							console.log("Your direction isn't up, down, left, or right."); 
+						else 
+							console.log("You don't have enough energy to move."); 
+						break; 
 					}
-					else 
-						console.log("Direction is null!"); 
-				}
-				else if (data.type == 'skill')	//check skill type
-				{
-					if ((data.arg) && (data.arg.name != null))	//make sure name is valid
+					case ('skill'):
 					{
-						name = data.arg.name; 
-						unit = data.unit;
-						socket.emit('update', {'units': units});
-						console.log("Valid player move (type skill)");
-						console.log("Unit is " + unit);
-						console.log("Type is " + data.type);
+						if (isValidSkill(data))	//make sure name is valid
+						{
+							name = data.arg.name; 
+							unit = data.unit;
+							socket.emit('update', {'units': units});
+							console.log("Valid player move (type skill)");
+							console.log("Unit is " + unit);
+							console.log("Type is " + data.type);
+						}
+						else 
+							console.log("Name is null!");
+							break; 
 					}
-					else 
-						console.log("Name is null!");
 				}
 			}	
-			
 		}
-			else
-				console.log("It's not your turn!"); 
+		else
+			console.log("It's not your turn!"); 
 	});
 	
 	socket.on('disconnect', function(data) {
