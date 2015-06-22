@@ -387,15 +387,40 @@ units[2] = [
 	}
 ];
 
+
 // socket connection
 io.sockets.on('connection', function(socket) {
 	var userID = nextUserID++;
 	liveSockets[userID] = socket;
 	console.log("New connection of ID " + userID);
+
+	//send both players updated unit information
+	function emitUpdatedUnits()
+	{
+		liveSockets[p1].emit('update', {'units': units});
+		liveSockets[p2].emit('update', {'units': units});
+	}
+
+	//restore energy of all units
+	function restoreAllEnergy()
+	{
+		for (i = 1; i <= 2; i++)
+		{
+			for (j = 0; j < units[i].length; j++)
+				units[i][j].energy = units[i][j].maxenergy; 
+		}
+	}
+
 	//end turn
 	socket.on('endturn', function(data){
 		if (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)))
 		{
+			restoreAllEnergy();
+			emitUpdatedUnits();
+
+			//refresh images
+			//
+
 			switch (currentturn)
 			{
 				case 0:
@@ -467,13 +492,6 @@ io.sockets.on('connection', function(socket) {
 	//socket.emit('playermove', {type: 'skill', skill: 'attack', unit: 0, target: 0});
 	socket.on('playermove', function(data) {
 
-		//send both players updated unit information
-		function emitUpdatedUnits()
-		{
-			liveSockets[p1].emit('update', {'units': units});
-			liveSockets[p2].emit('update', {'units': units});
-		}
-
 		//will either return 1 or 2
 		//used to easily access units[1] or units[2]
 		function getUnitIndex()
@@ -500,12 +518,7 @@ io.sockets.on('connection', function(socket) {
 			}
 		}
 
-		//restore energy
-		//unit = index to access in units[]
-		function restoreEnergy(unit)
-		{
-			units[getUnitIndex()][unit].energy = units[getUnitIndex()][unit].maxenergy; 
-		}
+		
 
 
 
@@ -757,8 +770,7 @@ io.sockets.on('connection', function(socket) {
 					{
 						if (processMovement(data))
 						{
-							console.log("Move processed");
-							//restoreEnergy(data.unit); 
+							console.log("Move processed"); 
 							emitUpdatedUnits();
 						}
 						else
@@ -774,7 +786,6 @@ io.sockets.on('connection', function(socket) {
 							if (processSkillMove(data.unit, skill, data.target))
 							{
 								console.log("Skill processed");
-								restoreEnergy(data.unit);
 								emitUpdatedUnits();
 							}
 							else
