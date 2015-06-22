@@ -76,6 +76,7 @@ function unitclick(id) {
 			menuLayer.draw();
 			hideInfo();
 		}
+		
 		// if a unit is clicked, highlight it (and un-highlight the previously selected unit or tile)
 		else {
 			resettileselection();
