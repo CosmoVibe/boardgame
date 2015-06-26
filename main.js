@@ -276,7 +276,8 @@ units[2] = [
 		maxenergy: 3,
 		energy: 3,
 		movecost: 1,
-		skills: {}
+		skills: {},
+		description: ''
 	},
 	{
 		id: 1,	// rogue
@@ -288,7 +289,8 @@ units[2] = [
 		maxenergy: 5,
 		energy: 5,
 		movecost: 1,
-		skills: {}
+		skills: {},
+		description: ''
 	},
 	{
 		id: 0,	// fighter
@@ -331,7 +333,8 @@ units[2] = [
 					}
 				]
 			},
-		}
+		},
+		description: ''
 	},
 	{
 		id: 4,	// support
@@ -343,7 +346,8 @@ units[2] = [
 		maxenergy: 3,
 		energy: 3,
 		movecost: 1,
-		skills: {}
+		skills: {},
+		description: ''
 	},
 	{
 		id: 3,	// mage
@@ -355,7 +359,8 @@ units[2] = [
 		maxenergy: 3,
 		energy: 3,
 		movecost: 1,
-		skills: {}
+		skills: {},
+		description: ''
 	}
 ];
 

@@ -1,103 +1,128 @@
 // Button Code //
 
+
 // method executed when tile is clicked
 function tileclick(id) {
-	// if there is selected action taking place
-	if (selectedaction === 1) {
-		// if unit was selected, and move choice was made, send move to the server
-	}
-	else if (selectedaction == 0 && selectedunit[0] == playernum) {
-		// send move to server
-		socket.emit('playermove', {
-			unit: selectedunit[1],
-			type: 'move',
-			arg: {
-				direction: [
-					id[0]-units[playernum][selectedunit[1]].position[0],
-					id[1]-units[playernum][selectedunit[1]].position[1]
-				]
-			}
-		});
-		// clear selections
+	// no unit selected
+	if (selectedunit[0] === -1) {
+		var fork = false;
+		if (selectedtile[0] != id[0] || selectedtile[1] != id[1]) fork = true;
+		
 		resetmenugroup();
-		menugroup.hide();
-		menuLayer.draw();
-
 		resettileselection();
 		resethighlightedtiles();
-		
-		resetunitselection();
-		
-		hideInfo();
-		
-	}
-	// if there is no selected action taking place
-	else {
-		// if a tile clicked is already highlighted, un-highlight it
-		if (selectedtile == id) {
-			resettileselection();
-		}
-		// if a tile is clicked, highlight it (and un-highlight the previously selected unit or tile)
-		else {
-			resetunitselection();
-			
-			// update interface
-			resetmenugroup();
-			menugroup.hide();
-			menuLayer.draw();
-			hideInfo();
-			
-			resethighlightedtiles();
-
-			resettileselection();
-			selectedtile = id;
+		// not clicking on highlighted tile
+		if (fork) {
+			selectedtile = clone(id);
 			console.log("the tile " + id + " is selected");
 			tileborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 		}
 	}
+	// unit selected
+	else {
+		// no action selected
+		if (selectedaction === -1) {
+			resetunitselection();
+			resettileselection();
+			resethighlightedtiles();
+
+			selectedtile = clone(id);
+			console.log("the tile " + id + " is selected");
+			tileborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
+
+			resetmenugroup();
+			menugroup.hide();
+		}
+		// action selected
+		else {
+			// unit and selection highlighted, tile clicked
+
+			// movement
+			if (selectedaction == 0 && selectedunit[0] == playernum) {
+				// send move to server
+				socket.emit('playermove', {
+					unit: selectedunit[1],
+					type: 'move',
+					arg: {
+						direction: [
+							id[0]-units[playernum][selectedunit[1]].position[0],
+							id[1]-units[playernum][selectedunit[1]].position[1]
+						]
+					}
+				});
+				// local client movement
+				// units[playernum][selectedunit[1]].position = clone(id);
+				// unitrefresh();
+
+				// clear selections
+				resetmenugroup();
+				menugroup.hide();
+				menuLayer.draw();
+
+				resettileselection();
+				resethighlightedtiles();				
+				resetunitselection();
+				
+				hideInfo();
+			}
+		}
+	}
+	menuLayer.draw();
+	unitLayer.draw();
 	tileLayer.draw();
 }
 
-
 // method executed when unit is clicked
 function unitclick(id) {
-	// if there is selected action taking place
-	if (selectedaction === 1) {
-	}
-	// if there is no selected action taking place
-	else {
-		// if a unit clicked is already highlighted, un-highlight it
-		if (selectedunit == id) {
-			console.log("no unit selected");
-			resetunitselection();
-			// in addition, update interface
-			resetmenugroup();
-			menugroup.hide();
-			menuLayer.draw();
-			hideInfo();
-		}
-		
-		// if a unit is clicked, highlight it (and un-highlight the previously selected unit or tile)
-		else {
-			resettileselection();
-			resetunitselection();
+	// no unit selected
+	if (selectedunit[0] === -1) {
+		resetmenugroup();
+		resettileselection();
+		resethighlightedtiles();
 
-			selectedunit = id;
-			console.log("unit " + id[1] + " of player " + id[0] + " is selected");
-			unitborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
-			uniticonborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
-			showInfo();
-			
-			// in addition, if it is own unit, bring up the menu for move options, otherwise, hide it
-			if (selectedunit[0] === playernum) {
-				menugroup.show();
-				resetmenugroup();
+		selectedunit = clone(id);
+		// console.log("unit " + id[1] + " of player " + id[0] + " is selected");
+		unitborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
+		uniticonborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
+
+		showInfo();
+		if (selectedunit[0] === playernum) menugroup.show();
+		else menugroup.hide();
+	}
+	// unit selected
+	else {
+		// no action selected
+		if (selectedaction === -1) {
+			var fork = false;
+			if (selectedunit[0] != id[0] || selectedunit[1] != id[1]) fork = true;
+
+			resetmenugroup();
+			resetunitselection();
+			// not clicking on selected unit
+			if (fork) {
+				selectedunit = clone(id);
+				// console.log("unit " + id[1] + " of player " + id[0] + " is selected");
+				unitborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
+				uniticonborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
+
+				showInfo();
+				if (selectedunit[0] === playernum) menugroup.show();
+				else menugroup.hide();
 			}
-			else menugroup.hide();
-			menuLayer.draw();
+			// clicking on selected unit
+			else {
+				hideInfo();
+				menugroup.hide();
+			}
+		}
+		// action selected
+		else {
+			// click on unit after unit skill is selected
 		}
 	}
+	menuLayer.draw();
 	unitLayer.draw();
+	tileLayer.draw();
 }
 
 
