@@ -40,7 +40,7 @@ function tileclick(id) {
 			// movement
 			if (selectedaction == 0 && selectedunit[0] == playernum) {
 				// send move to server
-				socket.emit('playermove', {
+				/*socket.emit('playermove', {
 					unit: selectedunit[1],
 					type: 'move',
 					arg: {
@@ -49,10 +49,10 @@ function tileclick(id) {
 							id[1]-units[playernum][selectedunit[1]].position[1]
 						]
 					}
-				});
+				});*/
 				// local client movement
-				// units[playernum][selectedunit[1]].position = clone(id);
-				// unitrefresh();
+				units[playernum][selectedunit[1]].position = clone(id);
+				unitrefresh();
 
 				// clear selections
 				resetmenugroup();
@@ -301,15 +301,3 @@ socket.on('update', function(data) {
 
 
 
-
-// game helper methods
-
-// determines whether or not the tile is occupied by a character
-// returns 0 for no character, 1 for a character of player 1, and 2 for a character of player 2
-function occupied(x,y) {
-	for (var k = 0; k < 5; k++) {
-		if (units[1][k].position[0] === x && units[1][k].position[1] === y) return 1;
-		else if (units[2][k].position[0] === x && units[2][k].position[1] === y) return 2;
-	}
-	return 0;
-}
