@@ -158,8 +158,17 @@ function resetunitselection() {
 // resetmenugroup() - resets state and button border color (still need to manually redraw)
 function resetmenugroup() {
 	selectedaction = -1;
-	movementButtonBox.setAttrs({stroke: 'black'});
-	skillButtonBox.setAttrs({stroke: 'black'});
+	for (var k = 0; k < skillButtons.length; k++) {
+		skillButtonsBox[k].setAttrs({stroke: 'black'});
+	}
+}
+
+// showkButtons(k) - hides buttons past a count of n
+function showkButtons(k) {
+	for (var n = k+1; n < skillButtons.length; n++) {
+		skillButtons[n].hide();
+	}
+	menuLayer.draw();
 }
 
 
@@ -185,6 +194,24 @@ function showInfo() {
 	// display info
 	infoGroup.show();
 	infoLayer.draw();
+	
+	// load skill buttons
+	for (var k = 0; k < maxButtons; k++) {
+		if (k === 0) {
+			skillButtonsText[k].setAttrs({text: "Move"});
+			skillButtonsText[k].offset({x: skillButtonsText[k].width()/2, y: skillButtonsText[k].height()/2});
+		}
+		else if (k <= units[selectedunit[0]][selectedunit[1]].skills.length) {
+			skillButtonsText[k].setAttrs({text: units[selectedunit[0]][selectedunit[1]].skills[k-1].name});
+			skillButtonsText[k].offset({x: skillButtonsText[k].width()/2, y: skillButtonsText[k].height()/2});
+		}
+		else {
+			skillButtonsText[k].setAttrs({text: ''});
+		}
+	}	
+	
+	// display skill buttons
+	showkButtons(units[selectedunit[0]][selectedunit[1]].skills.length);
 }
 
 // hideInfo() - hides the infoLayer details for the selected tile/unit

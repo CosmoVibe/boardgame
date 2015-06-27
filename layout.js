@@ -283,62 +283,58 @@ var menubox = new Kinetic.Rect({
 });
 menugroup.add(menubox);
 
-// move button
-var movementButton = new Kinetic.Group({x: 3, y: 3});
-var movementButtonBox = new Kinetic.Rect({
-	width: 220,
-	height: 40,
-	x: 0,
-	y: 0,
-	stroke: 'black',
-	strokeWidth: 2,
-	fill: '#CCCCCC'
-});
-var movementButtonText = new Kinetic.Text({
-	x: movementButtonBox.width()/2,
-	y: movementButtonBox.height()/2,
-	text: 'move',
-	fontSize: 20,
-	fontFamily: 'Calibri',
-	fill: 'black'
-});
-movementButtonText.offset({x: movementButtonText.width()/2, y: movementButtonText.height()/2});
-movementButton.add(movementButtonBox);
-movementButton.add(movementButtonText);
-movementButtonText.moveToTop();
-menugroup.add(movementButton);
 
-// skill button
-var skillButton = new Kinetic.Group({x: 3, y: 3+40+3});
-var skillButtonBox = new Kinetic.Rect({
-	width: 220,
-	height: 40,
-	x: 0,
-	y: 0,
-	stroke: 'black',
-	strokeWidth: 2,
-	fill: '#CCCCCC'
-});
-var skillButtonText = new Kinetic.Text({
-	x: skillButtonBox.width()/2,
-	y: skillButtonBox.height()/2,
-	text: 'skill',
-	fontSize: 20,
-	fontFamily: 'Calibri',
-	fill: 'black'
-});
-skillButtonText.offset({x: skillButtonText.width()/2, y: skillButtonText.height()/2});
-skillButton.add(skillButtonBox);
-skillButton.add(skillButtonText);
-skillButtonText.moveToTop();
-menugroup.add(skillButton);
+var buttonsX = 2;
+var buttonsY = 3;
+var maxButtons = buttonsX * buttonsY;
+var skillButtonWidth = 220;
+var skillButtonHeight = 40;
+var skillButtonGap = 3;
 
+var skillButtons = [];
+var skillButtonsBox = [];
+var skillButtonsText = [];
 
-menuLayer.add(menugroup);
-stage.add(menuLayer);	// add layer to stage
-menugroup.hide();
+for (var k = 0; k < maxButtons; k++) {
+	skillButtons[k] = new Kinetic.Group({
+		x: Math.floor(k/buttonsY)*(skillButtonGap + skillButtonWidth) + skillButtonGap,
+		y: (k%buttonsY)*(skillButtonGap + skillButtonHeight) + skillButtonGap
+	});
+	skillButtonsBox[k] = new Kinetic.Rect({
+		width: skillButtonWidth,
+		height: skillButtonHeight,
+		x: 0,
+		y: 0,
+		stroke: 'black',
+		strokeWidth: 2,
+		fill: '#CCCCCC'
+	});
+	skillButtonsText[k] = new Kinetic.Text({
+		x: skillButtonWidth/2,
+		y: skillButtonHeight/2,
+		text: 'move',
+		fontSize: 20,
+		fontFamily: 'Calibri',
+		fill: 'black'
+	});
+	skillButtonsText[k].offset({x: skillButtonsText[k].width()/2, y: skillButtonsText[k].height()/2});
+	skillButtons[k].add(skillButtonsBox[k]);
+	skillButtons[k].add(skillButtonsText[k]);
+	skillButtonsText[k].moveToTop();
+	
+	skillButtons[k].id = k;
+	skillButtons[k].on('mouseover', function() {
+		document.body.style.cursor = 'pointer';
+	});
+	skillButtons[k].on('mouseout', function() {
+		document.body.style.cursor = 'default';
+	});
+	skillButtons[k].on('click', function(evt) {
+		skillButtonsClick(this.id);
+	});
 
-
+	menugroup.add(skillButtons[k]);
+}
 
 
 

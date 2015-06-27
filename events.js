@@ -127,6 +127,56 @@ function unitclick(id) {
 	tileLayer.draw();
 }
 
+// method executed when a skill button is clicked
+function skillButtonsClick(n) {
+	if (selectedaction === n) {
+		resetmenugroup();
+		resethighlightedtiles();
+		selectedaction = -1;
+	}
+	else {
+		resetmenugroup();
+		resethighlightedtiles();
+		skillButtonsBox[n].setAttrs({stroke: 'yellow'});
+		selectedaction = n;
+		
+		// highlight tiles based on what skill was selected
+		// (!) need a better method to figure out what to highlight. switch case used as placeholder
+		switch (n) {
+			// movement
+			case 0:
+				// in case this button is clicked without a unit selected
+				if (selectedunit[0] != -1) {
+					// highlight all of the available move locations
+					var x = units[selectedunit[0]][selectedunit[1]].position[0];
+					var y = units[selectedunit[0]][selectedunit[1]].position[1];
+					if (!occupied(x+1,y)) highlighttile(x+1,y, 'yellow');
+					if (!occupied(x-1,y)) highlighttile(x-1,y, 'yellow');
+					if (!occupied(x,y+1)) highlighttile(x,y+1, 'yellow');
+					if (!occupied(x,y-1)) highlighttile(x,y-1, 'yellow');
+				}
+				break;
+			// attack
+			case 1:
+				if (selectedunit[0] != -1) {
+					// highlight all of the available move locations
+					var x = units[selectedunit[0]][selectedunit[1]].position[0];
+					var y = units[selectedunit[0]][selectedunit[1]].position[1];
+					if (occupied(x+1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x+1,y, 'red');
+					if (occupied(x-1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x-1,y, 'red');
+					if (occupied(x,y+1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y+1, 'red');
+					if (occupied(x,y-1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y-1, 'red');
+				}
+				break;
+			default:
+				break;
+		}
+		
+	}
+	tileLayer.draw();
+	menugroup.draw();
+}
+
 
 // connect button
 // when a player connects to the server, this button puts the player into the game (assuming server isn't full)
@@ -167,70 +217,6 @@ confirmButton.on('click', function(evt) {
 	overlayLayer.draw();
 });
 
-// movement button
-// once a unit is selected, the menu appears for this button
-// once clicked, clicking a tile will send an emit out to the server, indicating a move
-movementButton.on('mouseover', function() {
-	document.body.style.cursor = 'pointer';
-});
-movementButton.on('mouseout', function() {
-	document.body.style.cursor = 'default';
-});
-movementButton.on('click', function(evt) {
-	if (selectedaction === 0) {
-		resetmenugroup();
-		resethighlightedtiles();
-	}
-	else {
-		selectedaction = 0;
-		movementButtonBox.setAttrs({stroke: 'yellow'});
-		skillButtonBox.setAttrs({stroke: 'black'});
-		// in case this button is clicked without a unit selected
-		if (selectedunit[0] != -1) {
-			// highlight all of the available move locations
-			var x = units[selectedunit[0]][selectedunit[1]].position[0];
-			var y = units[selectedunit[0]][selectedunit[1]].position[1];
-			if (!occupied(x+1,y)) highlighttile(x+1,y, 'yellow');
-			if (!occupied(x-1,y)) highlighttile(x-1,y, 'yellow');
-			if (!occupied(x,y+1)) highlighttile(x,y+1, 'yellow');
-			if (!occupied(x,y-1)) highlighttile(x,y-1, 'yellow');
-		}
-	}
-	tileLayer.draw();
-	menugroup.draw();
-});
-
-// skill button
-// once a unit is selected, the menu appears for this button
-// once clicked, clicking a tile or unit will send an emit out to the server, indicating a skill to be used
-skillButton.on('mouseover', function() {
-	document.body.style.cursor = 'pointer';
-});
-skillButton.on('mouseout', function() {
-	document.body.style.cursor = 'default';
-});
-skillButton.on('click', function(evt) {
-	if (selectedaction === 1) {
-		resetmenugroup();
-		resethighlightedtiles();
-	}
-	else {
-		selectedaction = 1;
-		skillButtonBox.setAttrs({stroke: 'yellow'});
-		movementButtonBox.setAttrs({stroke: 'black'});
-		if (selectedunit[0] != -1) {
-			// highlight all of the available move locations
-			var x = units[selectedunit[0]][selectedunit[1]].position[0];
-			var y = units[selectedunit[0]][selectedunit[1]].position[1];
-			if (occupied(x+1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x+1,y, 'red');
-			if (occupied(x-1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x-1,y, 'red');
-			if (occupied(x,y+1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y+1, 'red');
-			if (occupied(x,y-1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y-1, 'red');
-		}
-	}
-	tileLayer.draw();
-	menugroup.draw();
-});
 
 
 
@@ -250,6 +236,7 @@ socket.on('confirmlogin2', function(data) {
 
 	overlayLayer.draw();
 });
+
 // player is notified that server is full
 socket.on('playersfull', function(data) {
 	// connect button changes appearance accordingly
@@ -280,9 +267,10 @@ socket.on('startgame', function(data) {
 		confirmButtonText.setAttrs({text: "opponent's turn"});
 	}
 	confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
-	
 	overlayLayer.draw();
+	unitrefresh();
 });
+
 // notifies player it is his turn
 socket.on('yourturn', function(data) {
 	console.log("it is your turn");
@@ -293,6 +281,7 @@ socket.on('yourturn', function(data) {
 	confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
 	overlayLayer.draw();
 });
+
 // receiving update of board state
 socket.on('update', function(data) {
 	// need to copy received board state to client variables
