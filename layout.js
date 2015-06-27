@@ -1,8 +1,8 @@
 // Layers //
 
 // these layers should be in this display order from top to bottom
-var menuLayer = new Kinetic.Layer();	// draws menu box that holds button where players choose what the unit does
 var infoLayer = new Kinetic.Layer(); 	// draws buttons and info
+var menuLayer = new Kinetic.Layer();	// draws menu box that holds button where players choose what the unit does
 var overlayLayer = new Kinetic.Layer(); 	// draws buttons and info
 var unitLayer = new Kinetic.Layer();	// draws the units
 var tileLayer = new Kinetic.Layer();	// draws the tiles
@@ -330,7 +330,9 @@ for (var k = 0; k < maxButtons; k++) {
 
 	menugroup.add(skillButtons[k]);
 }
-
+menuLayer.add(menugroup);
+stage.add(menuLayer);	// add layer to stage
+menugroup.hide();
 
 
 

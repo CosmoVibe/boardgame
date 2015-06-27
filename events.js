@@ -131,6 +131,7 @@ function unitclick(id) {
 
 // method executed when a skill button is clicked
 function skillButtonsClick(n) {
+	// cancel skill by clicking on already highlighted button
 	if (selectedActionIndex === n) {
 		resetmenugroup();
 		resethighlightedtiles();
@@ -140,18 +141,8 @@ function skillButtonsClick(n) {
 		resetmenugroup();
 		resethighlightedtiles();
 		
-		// make sure the skill is not passive and toggleable
-		var sel = true;
-		if (selectedUnit().skills[n-1].target === 'passive') {
-			if (!selectedUnit().skills[n-1].toggleable) sel = false;
-		}
-		if (sel) {
-			skillButtonsBox[n].setAttrs({stroke: 'yellow'});
-			selectedActionIndex = n;
-		}
-		
 		// highlight tiles based on what skill was selected
-		// (!) need a better method to figure out what to highlight. switch case used as placeholder
+		// (!) need a better method to figure out what to highlight. basic movement case used as placeholder
 		if (n === 0) {
 			// movement
 			// in case this button is clicked without a unit selected
@@ -163,6 +154,9 @@ function skillButtonsClick(n) {
 				if (!occupied(x-1,y)) highlighttile(x-1,y, 'yellow');
 				if (!occupied(x,y+1)) highlighttile(x,y+1, 'yellow');
 				if (!occupied(x,y-1)) highlighttile(x,y-1, 'yellow');
+
+				skillButtonsBox[n].setAttrs({stroke: 'yellow'});
+				selectedActionIndex = n;
 			}
 		}
 		else {
@@ -181,38 +175,51 @@ function skillButtonsClick(n) {
 			
 			// in case the skill for this button doesn't exist
 			if (selectedUnit().skills[n-1]) {
-				// first check what is targetable
-				// then find what needs to be highlighted
-				// finally highlight
-				switch (selectedUnit().skill[n-1].target) {
-					case 'unit':
-						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
-						for (var k = 0; k < dirarr.length; k++) {
-							if (occupied(x+dirarr[k][0],y+dirarr[k][1]) != 0) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
-						}
-						break;
-					case 'enemy unit':
-						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
-						for (var k = 0; k < dirarr.length; k++) {
-							if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === (playernum === 1 ? 2 : 1)) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
-						}
-						break;
-					case 'ally unit':
-						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
-						for (var k = 0; k < dirarr.length; k++) {
-							if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === playernum) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
-						}
-						break;
-					case 'tile':
-						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
-						for (var k = 0; k < dirarr.length; k++) {
-							highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
-						}
-						break;
-					case 'passive':
-						break;
-					default:
-						break;
+
+			// make sure the skill is not passive and toggleable
+				var sel = true;
+				if (selectedUnit().skills[n-1].target === 'passive') {
+					if (!selectedUnit().skills[n-1].toggleable) sel = false;
+				}
+				if (sel) {
+					skillButtonsBox[n].setAttrs({stroke: 'yellow'});
+					selectedActionIndex = n;
+
+					// first check what is targetable
+					// then find what needs to be highlighted
+					// finally highlight
+					switch (selectedUnit().skills[n-1].target) {
+						case 'unit':
+							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < dirarr.length; k++) {
+								if (occupied(x+dirarr[k][0],y+dirarr[k][1]) != 0) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							}
+							break;
+						case 'enemy unit':
+							console.log(selectedUnit().skills[n-1]);
+							console.log(selectedUnit().skills[n-1].range);
+							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < dirarr.length; k++) {
+								if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === (playernum === 1 ? 2 : 1)) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							}
+							break;
+						case 'ally unit':
+							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < dirarr.length; k++) {
+								if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === playernum) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							}
+							break;
+						case 'tile':
+							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < dirarr.length; k++) {
+								highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							}
+							break;
+						case 'passive':
+							break;
+						default:
+							break;
+					}
 				}
 			}
 		}
