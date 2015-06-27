@@ -190,29 +190,27 @@ function skillButtonsClick(n) {
 					// finally highlight
 					switch (selectedUnit().skills[n-1].target) {
 						case 'unit':
-							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
-							for (var k = 0; k < dirarr.length; k++) {
-								if (occupied(x+dirarr[k][0],y+dirarr[k][1]) != 0) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < tilearr.length; k++) {
+								if (occupied(tilearr[k][0],tilearr[k][1]) != 0) highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
 							break;
 						case 'enemy unit':
-							console.log(selectedUnit().skills[n-1]);
-							console.log(selectedUnit().skills[n-1].range);
-							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
-							for (var k = 0; k < dirarr.length; k++) {
-								if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === (playernum === 1 ? 2 : 1)) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < tilearr.length; k++) {
+								if (occupied(tilearr[k][0],tilearr[k][1]) === (playernum === 1 ? 2 : 1)) highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
 							break;
 						case 'ally unit':
-							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
-							for (var k = 0; k < dirarr.length; k++) {
-								if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === playernum) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < tilearr.length; k++) {
+								if (occupied(tilearr[k][0],tilearr[k][1]) === playernum) highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
 							break;
 						case 'tile':
-							var dirarr = funcDirSearch(selectedUnit().skills[n-1].range);
-							for (var k = 0; k < dirarr.length; k++) {
-								highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
+							for (var k = 0; k < tilearr.length; k++) {
+								highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
 							break;
 						case 'passive':
