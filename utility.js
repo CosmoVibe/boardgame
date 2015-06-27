@@ -50,6 +50,23 @@ function occupied(x,y) {
 	return 0;
 }
 
+// funcDirSearch(func) - all of the tile coordinates are passed into func, and if returned true, are added to the return array
+// the input of func is dir, the DIFFERENCE between the selected unit's position and the coordinate
+function funcDirSearch(func) {
+	var arr = [];
+	for (var x = 0; x < mapx; x++) {
+		for (var y = 0; y < mapy; y++) {
+			if (func([selectedUnit().position[0]-x,selectedUnit().position[1]-y])) arr.push([x,y]);
+		}
+	}
+	return arr;
+}
+
+// selectedUnit() - returns the currently selected unit
+function selectedUnit() {
+	if (selectedUnitIndex[0] != -1) return units[selectedUnitIndex[0]][selectedUnitIndex[1]];
+}
+
 
 
 
@@ -75,9 +92,9 @@ boardrefresh();
 
 // resettileselection() - resets the selected tile
 function resettileselection() {
-	if (selectedtile[0] != -1) {
-		tileborders[selectedtile[0]][selectedtile[1]].setAttrs({stroke: 'black'});
-		selectedtile = [-1,-1];
+	if (selectedTileIndex[0] != -1) {
+		tileborders[selectedTileIndex[0]][selectedTileIndex[1]].setAttrs({stroke: 'black'});
+		selectedTileIndex = [-1,-1];
 		tileLayer.draw();
 	}
 }
@@ -142,10 +159,10 @@ function unitrefresh() {
 
 // resetunitselection() - resets unit selection
 function resetunitselection() {
-	if (selectedunit[0] != -1) {
-		unitborders[selectedunit[0]][selectedunit[1]].setAttrs({stroke: (selectedunit[0] === playernum ? 'blue' : 'red')});
-		uniticonborders[selectedunit[0]][selectedunit[1]].setAttrs({stroke: (selectedunit[0] === playernum ? 'blue' : 'red')});
-		selectedunit = [-1,-1];
+	if (selectedUnitIndex[0] != -1) {
+		unitborders[selectedUnitIndex[0]][selectedUnitIndex[1]].setAttrs({stroke: (selectedUnitIndex[0] === playernum ? 'blue' : 'red')});
+		uniticonborders[selectedUnitIndex[0]][selectedUnitIndex[1]].setAttrs({stroke: (selectedUnitIndex[0] === playernum ? 'blue' : 'red')});
+		selectedUnitIndex = [-1,-1];
 		unitLayer.draw();
 	}
 }
@@ -157,7 +174,7 @@ function resetunitselection() {
 
 // resetmenugroup() - resets state and button border color (still need to manually redraw)
 function resetmenugroup() {
-	selectedaction = -1;
+	selectedActionIndex = -1;
 	for (var k = 0; k < skillButtons.length; k++) {
 		skillButtonsBox[k].setAttrs({stroke: 'black'});
 	}
@@ -179,17 +196,17 @@ function showkButtons(k) {
 // showInfo() - loads and displays details on infoLayer for the selected tile/unit
 function showInfo() {
 	// load info
-	infoUnitIcon.setAttrs({crop: idsprite(units[selectedunit[0]][selectedunit[1]].id)});
-	infoHPbar.setAttrs({width: tilesize*(units[selectedunit[0]][selectedunit[1]].hp / units[selectedunit[0]][selectedunit[1]].maxhp)});
-	infoEnergyBar.setAttrs({width: tilesize*(units[selectedunit[0]][selectedunit[1]].energy / units[selectedunit[0]][selectedunit[1]].maxenergy)});
+	infoUnitIcon.setAttrs({crop: idsprite(selectedUnit().id)});
+	infoHPbar.setAttrs({width: tilesize*(selectedUnit().hp / selectedUnit().maxhp)});
+	infoEnergyBar.setAttrs({width: tilesize*(selectedUnit().energy / selectedUnit().maxenergy)});
 
-	infoNameText.setAttrs({text: units[selectedunit[0]][selectedunit[1]].name});
-	infoPositionText.setAttrs({text: 'Position: ' + units[selectedunit[0]][selectedunit[1]].position[0] + ',' + units[selectedunit[0]][selectedunit[1]].position[1]});
-	infoHPText.setAttrs({text: 'HP: ' + units[selectedunit[0]][selectedunit[1]].hp + '/' + units[selectedunit[0]][selectedunit[1]].maxhp});
-	infoEnergyText.setAttrs({text: 'Energy: ' + units[selectedunit[0]][selectedunit[1]].energy + '/' + units[selectedunit[0]][selectedunit[1]].maxenergy});
-	infoStrengthText.setAttrs({text: 'Strength: ' + units[selectedunit[0]][selectedunit[1]].strength});
-	infoMovementCostText.setAttrs({text: 'Movement Cost: ' + units[selectedunit[0]][selectedunit[1]].movecost});
-	infoDescriptionText.setAttrs({text: units[selectedunit[0]][selectedunit[1]].description});
+	infoNameText.setAttrs({text: selectedUnit().name});
+	infoPositionText.setAttrs({text: 'Position: ' + selectedUnit().position[0] + ',' + selectedUnit().position[1]});
+	infoHPText.setAttrs({text: 'HP: ' + selectedUnit().hp + '/' + selectedUnit().maxhp});
+	infoEnergyText.setAttrs({text: 'Energy: ' + selectedUnit().energy + '/' + selectedUnit().maxenergy});
+	infoStrengthText.setAttrs({text: 'Strength: ' + selectedUnit().strength});
+	infoMovementCostText.setAttrs({text: 'Movement Cost: ' + selectedUnit().movecost});
+	infoDescriptionText.setAttrs({text: selectedUnit().description});
 	
 	// display info
 	infoGroup.show();
@@ -201,8 +218,8 @@ function showInfo() {
 			skillButtonsText[k].setAttrs({text: "Move"});
 			skillButtonsText[k].offset({x: skillButtonsText[k].width()/2, y: skillButtonsText[k].height()/2});
 		}
-		else if (k <= units[selectedunit[0]][selectedunit[1]].skills.length) {
-			skillButtonsText[k].setAttrs({text: units[selectedunit[0]][selectedunit[1]].skills[k-1].name});
+		else if (k <= selectedUnit().skills.length) {
+			skillButtonsText[k].setAttrs({text: selectedUnit().skills[k-1].name});
 			skillButtonsText[k].offset({x: skillButtonsText[k].width()/2, y: skillButtonsText[k].height()/2});
 		}
 		else {
@@ -211,7 +228,7 @@ function showInfo() {
 	}	
 	
 	// display skill buttons
-	showkButtons(units[selectedunit[0]][selectedunit[1]].skills.length);
+	showkButtons(selectedUnit().skills.length);
 }
 
 // hideInfo() - hides the infoLayer details for the selected tile/unit

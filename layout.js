@@ -1,8 +1,8 @@
 // Layers //
 
 // these layers should be in this display order from top to bottom
-var infoLayer = new Kinetic.Layer(); 	// draws buttons and info
 var menuLayer = new Kinetic.Layer();	// draws menu box that holds button where players choose what the unit does
+var infoLayer = new Kinetic.Layer(); 	// draws buttons and info
 var overlayLayer = new Kinetic.Layer(); 	// draws buttons and info
 var unitLayer = new Kinetic.Layer();	// draws the units
 var tileLayer = new Kinetic.Layer();	// draws the tiles
@@ -80,15 +80,10 @@ stage.add(overlayLayer);	// add layer to stage
 
 
 // Board Setup //
-var boardstartx = 10;
-var boardstarty = 10;
 var tilegroup = new Kinetic.Group({
 	x: boardstartx,
 	y: boardstarty
 });
-var mapx = 5;
-var mapy = 5;
-var tilesize = 64;
 var boardtiles = [];
 var boardtileimages = [];
 var tileborders = [];
@@ -188,7 +183,7 @@ for (var p = 1; p <= 2; p++) {
 			y: boardstarty+n*tilesize+1,
 			width: tilesize-2,
 			height: tilesize-2,
-			stroke: (selectedunit[0] === playernum ? 'blue' : 'red'),
+			stroke: (selectedUnitIndex[0] === playernum ? 'blue' : 'red'),
 			strokeWidth: 1
 		});
 		unitimages[p][n] = new Kinetic.Image({
@@ -210,7 +205,7 @@ for (var p = 1; p <= 2; p++) {
 			y: 50+(p-1)*(tilesize+10),
 			width: tilesize,
 			height: tilesize,
-			stroke: (selectedunit[0] === playernum ? 'blue' : 'red'),
+			stroke: (selectedUnitIndex[0] === playernum ? 'blue' : 'red'),
 			strokeWidth: 2
 		});
 		uniticonimages[p][n] = new Kinetic.Image({

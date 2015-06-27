@@ -92,6 +92,14 @@ function idsprite(id) {
 }
 
 
+// Layout variables //
+
+var boardstartx = 10;
+var boardstarty = 10;
+var mapx = 5;
+var mapy = 5;
+var tilesize = 64;
+
 
 
 
@@ -104,9 +112,9 @@ var gamestarted = false;
 var playernum = -1;
 var currentturn = 0;
 
-var selectedunit = [-1,-1];
-var selectedtile = [-1,-1];
-var selectedaction = -1;	// 0 means movement, 1+ means skill
+var selectedUnitIndex = [-1,-1];
+var selectedTileIndex = [-1,-1];
+var selectedActionIndex = -1;	// 0 means movement, 1+ means skill
 
 
 

@@ -4,16 +4,16 @@
 // method executed when tile is clicked
 function tileclick(id) {
 	// no unit selected
-	if (selectedunit[0] === -1) {
+	if (selectedUnitIndex[0] === -1) {
 		var fork = false;
-		if (selectedtile[0] != id[0] || selectedtile[1] != id[1]) fork = true;
+		if (selectedTileIndex[0] != id[0] || selectedTileIndex[1] != id[1]) fork = true;
 		
 		resetmenugroup();
 		resettileselection();
 		resethighlightedtiles();
 		// not clicking on highlighted tile
 		if (fork) {
-			selectedtile = clone(id);
+			selectedTileIndex = clone(id);
 			console.log("the tile " + id + " is selected");
 			tileborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 		}
@@ -21,12 +21,12 @@ function tileclick(id) {
 	// unit selected
 	else {
 		// no action selected
-		if (selectedaction === -1) {
+		if (selectedActionIndex === -1) {
 			resetunitselection();
 			resettileselection();
 			resethighlightedtiles();
 
-			selectedtile = clone(id);
+			selectedTileIndex = clone(id);
 			console.log("the tile " + id + " is selected");
 			tileborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 
@@ -38,21 +38,21 @@ function tileclick(id) {
 			// unit and selection highlighted, tile clicked
 
 			// movement
-			if (selectedaction == 0 && selectedunit[0] == playernum) {
+			if (selectedActionIndex == 0 && selectedUnitIndex[0] == playernum) {
 				// send move to server
 				socket.emit('playermove', {
-					unit: selectedunit[1],
+					unit: selectedUnitIndex[1],
 					type: 'move',
 					arg: {
 						direction: [
-							id[0]-units[playernum][selectedunit[1]].position[0],
-							id[1]-units[playernum][selectedunit[1]].position[1]
+							id[0]-units[playernum][selectedUnitIndex[1]].position[0],
+							id[1]-units[playernum][selectedUnitIndex[1]].position[1]
 						]
 					}
 				});
 				// local client movement
 				/*
-				units[playernum][selectedunit[1]].position = clone(id);
+				units[playernum][selectedUnitIndex[1]].position = clone(id);
 				unitrefresh();
 				*/
 
@@ -74,41 +74,42 @@ function tileclick(id) {
 	tileLayer.draw();
 }
 
+
 // method executed when unit is clicked
 function unitclick(id) {
 	// no unit selected
-	if (selectedunit[0] === -1) {
+	if (selectedUnitIndex[0] === -1) {
 		resetmenugroup();
 		resettileselection();
 		resethighlightedtiles();
 
-		selectedunit = clone(id);
+		selectedUnitIndex = clone(id);
 		// console.log("unit " + id[1] + " of player " + id[0] + " is selected");
 		unitborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 		uniticonborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 
 		showInfo();
-		if (selectedunit[0] === playernum) menugroup.show();
+		if (selectedUnitIndex[0] === playernum) menugroup.show();
 		else menugroup.hide();
 	}
 	// unit selected
 	else {
 		// no action selected
-		if (selectedaction === -1) {
+		if (selectedActionIndex === -1) {
 			var fork = false;
-			if (selectedunit[0] != id[0] || selectedunit[1] != id[1]) fork = true;
+			if (selectedUnitIndex[0] != id[0] || selectedUnitIndex[1] != id[1]) fork = true;
 
 			resetmenugroup();
 			resetunitselection();
 			// not clicking on selected unit
 			if (fork) {
-				selectedunit = clone(id);
+				selectedUnitIndex = clone(id);
 				// console.log("unit " + id[1] + " of player " + id[0] + " is selected");
 				unitborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 				uniticonborders[id[0]][id[1]].setAttrs({stroke: 'yellow'});
 
 				showInfo();
-				if (selectedunit[0] === playernum) menugroup.show();
+				if (selectedUnitIndex[0] === playernum) menugroup.show();
 				else menugroup.hide();
 			}
 			// clicking on selected unit
@@ -127,49 +128,93 @@ function unitclick(id) {
 	tileLayer.draw();
 }
 
+
 // method executed when a skill button is clicked
 function skillButtonsClick(n) {
-	if (selectedaction === n) {
+	if (selectedActionIndex === n) {
 		resetmenugroup();
 		resethighlightedtiles();
-		selectedaction = -1;
+		selectedActionIndex = -1;
 	}
 	else {
 		resetmenugroup();
 		resethighlightedtiles();
-		skillButtonsBox[n].setAttrs({stroke: 'yellow'});
-		selectedaction = n;
+		
+		// make sure the skill is not passive and toggleable
+		var sel = true;
+		if (selectedUnit().skills[n-1].target === 'passive') {
+			if (!selectedUnit().skills[n-1].toggleable) sel = false;
+		}
+		if (sel) {
+			skillButtonsBox[n].setAttrs({stroke: 'yellow'});
+			selectedActionIndex = n;
+		}
 		
 		// highlight tiles based on what skill was selected
 		// (!) need a better method to figure out what to highlight. switch case used as placeholder
-		switch (n) {
+		if (n === 0) {
 			// movement
-			case 0:
-				// in case this button is clicked without a unit selected
-				if (selectedunit[0] != -1) {
-					// highlight all of the available move locations
-					var x = units[selectedunit[0]][selectedunit[1]].position[0];
-					var y = units[selectedunit[0]][selectedunit[1]].position[1];
-					if (!occupied(x+1,y)) highlighttile(x+1,y, 'yellow');
-					if (!occupied(x-1,y)) highlighttile(x-1,y, 'yellow');
-					if (!occupied(x,y+1)) highlighttile(x,y+1, 'yellow');
-					if (!occupied(x,y-1)) highlighttile(x,y-1, 'yellow');
-				}
-				break;
+			// in case this button is clicked without a unit selected
+			if (selectedUnitIndex[0] != -1) {
+				// highlight all of the available move locations
+				var x = selectedUnit().position[0];
+				var y = selectedUnit().position[1];
+				if (!occupied(x+1,y)) highlighttile(x+1,y, 'yellow');
+				if (!occupied(x-1,y)) highlighttile(x-1,y, 'yellow');
+				if (!occupied(x,y+1)) highlighttile(x,y+1, 'yellow');
+				if (!occupied(x,y-1)) highlighttile(x,y-1, 'yellow');
+			}
+		}
+		else {
+			
 			// attack
-			case 1:
-				if (selectedunit[0] != -1) {
-					// highlight all of the available move locations
-					var x = units[selectedunit[0]][selectedunit[1]].position[0];
-					var y = units[selectedunit[0]][selectedunit[1]].position[1];
-					if (occupied(x+1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x+1,y, 'red');
-					if (occupied(x-1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x-1,y, 'red');
-					if (occupied(x,y+1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y+1, 'red');
-					if (occupied(x,y-1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y-1, 'red');
+			/*if (selectedUnitIndex[0] != -1) {
+				// highlight all of the available move locations
+				var x = selectedUnit().position[0];
+				var y = selectedUnit().position[1];
+				if (occupied(x+1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x+1,y, 'red');
+				if (occupied(x-1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x-1,y, 'red');
+				if (occupied(x,y+1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y+1, 'red');
+				if (occupied(x,y-1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y-1, 'red');
+			}*/
+			
+			
+			// in case the skill for this button doesn't exist
+			if (selectedUnit().skills[n-1]) {
+				// first check what is targetable
+				// then find what needs to be highlighted
+				// finally highlight
+				switch (selectedUnit().skill[n-1].target) {
+					case 'unit':
+						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
+						for (var k = 0; k < dirarr.length; k++) {
+							if (occupied(x+dirarr[k][0],y+dirarr[k][1]) != 0) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+						}
+						break;
+					case 'enemy unit':
+						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
+						for (var k = 0; k < dirarr.length; k++) {
+							if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === (playernum === 1 ? 2 : 1)) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+						}
+						break;
+					case 'ally unit':
+						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
+						for (var k = 0; k < dirarr.length; k++) {
+							if (occupied(x+dirarr[k][0],y+dirarr[k][1]) === playernum) highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+						}
+						break;
+					case 'tile':
+						var dirarr = funcDirSearch(selectedUnit().skill[n-1].range);
+						for (var k = 0; k < dirarr.length; k++) {
+							highlighttile(x+dirarr[k][0],y+dirarr[k][1], 'red');
+						}
+						break;
+					case 'passive':
+						break;
+					default:
+						break;
 				}
-				break;
-			default:
-				break;
+			}
 		}
 		
 	}
