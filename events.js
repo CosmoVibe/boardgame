@@ -40,7 +40,7 @@ function tileclick(id) {
 			// movement
 			if (selectedaction == 0 && selectedunit[0] == playernum) {
 				// send move to server
-				/*socket.emit('playermove', {
+				socket.emit('playermove', {
 					unit: selectedunit[1],
 					type: 'move',
 					arg: {
@@ -49,10 +49,12 @@ function tileclick(id) {
 							id[1]-units[playernum][selectedunit[1]].position[1]
 						]
 					}
-				});*/
+				});
 				// local client movement
+				/*
 				units[playernum][selectedunit[1]].position = clone(id);
 				unitrefresh();
+				*/
 
 				// clear selections
 				resetmenugroup();

@@ -598,7 +598,7 @@ io.sockets.on('connection', function(socket) {
 			if (actualUnit.energy >= actualUnit.movecost)
 			{
 				console.log("Movement granted");
-				actualUnit.energy = actualUnit.energy - actualUnit.movecost;
+				//actualUnit.energy = actualUnit.energy - actualUnit.movecost;
 				return true;  
 			}
 			else
@@ -646,6 +646,10 @@ io.sockets.on('connection', function(socket) {
 						else
 						{
 							console.log("New position is " + newPosition);
+							//decrease energy
+							var index = getUnitIndex();
+							var actualUnit = units[index][data.unit];
+							actualUnit.energy = actualUnit.energy - actualUnit.movecost;
 							return true; 
 						}
 					}
@@ -665,6 +669,114 @@ io.sockets.on('connection', function(socket) {
 
 		//skill variables
 
+		//returns the index to the array of functions all skills
+
+
+		//checks to see if the skill move 
+		//unitPosition = position of your unit (coordinate)
+		//targetPosition = position of the target (coordinate)
+		function isWithinRange(unitPosition, targetPosition, range)
+		{
+			var distance = [0, 0];	//initialize variables
+			distance[0] = unitPosition[0] - targetPosition[0];
+			distance[1] = unitPosition[1] - targetPosition[1];
+			console.log("unitPosition: " + unitPosition);
+			console.log("targetPosition: " + targetPosition);
+			console.log(distance); 
+			console.log(range);
+			console.log(range(distance)); 
+			return (range(distance)); 
+		}
+
+		//functions for checking ranges
+		var checkRange = [
+				function(range, target, unitArray)	//enemy unit
+				{
+					var unitPosition = unitArray.position; 
+					targetPosition = units[getEnemyUnitIndex()][target].position;
+					return (isWithinRange(unitPosition, targetPosition, range));  
+				},
+				function(range, target, unitArray)	//ally unit
+				{
+					var unitPosition = unitArray.position;
+					targetPosition = units[getUnitIndex()][target].position;
+					return (isWithinRange(unitPosition, targetPosition, range));
+				},
+				function(range, target, unitArray)	//tile
+				{
+					var unitPosition = unitArray.position;	
+					return (isWithinRange(unitPosition, target, range));
+				}
+		]; 
+
+		//get index for checking ranges
+		function getCheckRangeIndex(targetType)
+		{
+			switch(targetType)
+			{
+				case 'enemy unit':
+					return 0; 
+				case 'ally unit':
+					return 1; 
+				case 'tile':
+					return 2; 
+			}
+		}
+
+		//check to see if the move is within range
+		//skillArray = skill array
+		function isWithinRangeCheck(skillArray, target, unitArray)
+		{
+			var skillName = skillArray.name.toLowerCase();
+			var targetType = skillArray.target; 
+			console.log("Skill Name: " + skillName); 
+			console.log("Target Type: " + targetType);
+
+			var rangeIndex = getCheckRangeIndex(targetType);
+			console.log("Range Index: " + rangeIndex); 
+			console.log("Function: " + skillArray.range); 
+			return (checkRange[rangeIndex](skillArray.range, target, unitArray));
+		}
+
+		//skillName = name of the skill (ex: "Attack") *case sensitive*
+		function getAllActionsIndex(actionName)
+		{
+			switch (actionName)
+			{
+				case 'damage':
+					return 0; 
+				case 'movement':
+					return 1; 
+				case 'debuff':
+					return 2; 
+				case 'heal':
+					return 3;
+			}
+		}
+
+		var allActions = 
+		[
+			function (actionArray, unitArray, target)	//damage
+				{
+					var thisPosition = unitArray.position;
+					var enemyUnit = units[getEnemyUnitIndex()][target]; 
+					var enemyPosition = enemyUnit.position; 
+					console.log("My position: " + thisPosition);
+					console.log("Enemy Position: " + enemyPosition);
+					console.log("Range: " + skillArray.range);
+
+					console.log("Skill is within range");
+					console.log("Enemy HP Before: " + enemyUnit.hp); 
+					var ratio = actionArray.ratio;
+					console.log("Ratio: " + ratio);
+					console.log("Strength: " + unitArray.strength);   
+					var damage = unitArray.strength * ratio;
+					console.log("Damage: " + damage); 
+					enemyUnit.hp = enemyUnit.hp - damage; 
+					console.log("Enemy HP After: " + enemyUnit.hp); 
+				}
+		]; 
+
 		//is valid skill
 		function isValidSkill(data)
 		{
@@ -673,33 +785,32 @@ io.sockets.on('connection', function(socket) {
 
 		//get skill
 		//unit is an index
-		//skill is an array that will be compared
-		function getSkill(unit, skill)
+		//skillName is name of the skill
+		function getSkillArray(skillName, unit)
 		{
 			var index = getUnitIndex();
 			var skills = units[index][unit].skills; 
 			for (i = 0; i < skills.length; i++)
 			{
-				if (skills[i].name == skill)
+				if (skills[i].name.toUpperCase() == skillName.toUpperCase())
+				{
 					return (skills[i]); 
+				}
 			}
 		}
 
 		//has enough skill energy
-		//unit = index of the unit
-		//skill = skill of the unit (not an index)
-		function hasSkillEnergy(unit, skill)
+		//unitArray = array of the unit
+		//skill = skill array of the unit (not an index)
+		function hasSkillEnergy(unitArray, skillArray)
 		{
-			var index = getUnitIndex();
-			var actualUnit = units[index][unit];
+			console.log("Energy: " + unitArray.energy);
+			console.log("Skill Array: " + skillArray); 
+			console.log("Skill Cost: " + skillArray.cost); 
 
-			console.log("Energy: " + actualUnit.energy);
-			console.log("Skill Cost: " + skill.cost); 
-
-			if (actualUnit.energy >= skill.cost)
+			if (unitArray.energy >= skillArray.cost)
 			{
 				console.log("Has enough energy to do skill");
-				//actualUnit.energy = actualUnit.energy - skill.cost;
 				return true;  
 			}
 			else
@@ -709,37 +820,33 @@ io.sockets.on('connection', function(socket) {
 			}
 		}
 
-		//checks to see if the skill move 
-		//unitPosition = position of your unit (coordinate)
-		//targetPosition = position of the target (coordinate)
-		function isWithinRange(unitPosition, targetPosition, range)
-		{
-			return (range(unitPosition - targetPosition)); 
-		}
-
 		//process the skill move
 		//returns true if processed, false if not
-		//unit = index of the unit
-		//skill = skill array
-		function processSkillMove(unit, skill, target)
+		//unit = index of the unit in array, units[]
+		//skillArray = skill array
+		function processSkillMove(unit, skillArray, target)
 		{
-			var enemyIndex = getEnemyUnitIndex();
-			var index = getUnitIndex();
+			var unitIndex = getUnitIndex();
+			var unitArray = units[unitIndex][unit];
 
-			var enemy = units[enemyIndex][target];
-			var thisUnit = units[index][unit]; 
-			var enemyPosition = enemy.position; 
-			var thisPosition = thisUnit.position; 
-
-			if (hasSkillEnergy(unit, skill))
+			if (hasSkillEnergy(unitArray, skillArray))
 			{
-				if (isWithinRange(thisPosition, enemyPosition, skill.range))
+				if (isWithinRangeCheck(skillArray, target, unitArray))
 				{
-					console.log("Skill is within range");
-					return true;  
+					var actionArray = skillArray.action;
+					console.log("Action array: " + actionArray); 
+					for (i = 0; i < actionArray.length; i++)
+					{
+						var actionName = actionArray[i].type;
+						var actionIndex = getAllActionsIndex(actionName);
+						console.log("actionName: " + actionName);
+						console.log("actionIndex: " + actionIndex); 
+						allActions[actionIndex](actionArray[i], unitArray, target);
+					}
+
+					unitArray.energy = unitArray.energy - skillArray.cost;			
+					return true;
 				}
-				else 
-					console.log("Skill is not within range"); 
 			}
 			else
 				console.log("Not Enough Energy for skill");
@@ -770,7 +877,7 @@ io.sockets.on('connection', function(socket) {
 					{
 						if (processMovement(data))
 						{
-							console.log("Move processed"); 
+							console.log("Move processed");
 							emitUpdatedUnits();
 						}
 						else
@@ -782,8 +889,8 @@ io.sockets.on('connection', function(socket) {
 						if (isValidSkill(data))	//make sure name is valid and fields are not null
 						{
 							//socket.emit('update', {'units': units});
-							var skill = getSkill(data.unit, data.skill);
-							if (processSkillMove(data.unit, skill, data.target))
+							var skillArray = getSkillArray(data.skill, data.unit);
+							if (processSkillMove(data.unit, skillArray, data.target))
 							{
 								console.log("Skill processed");
 								emitUpdatedUnits();
