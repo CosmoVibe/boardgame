@@ -200,7 +200,7 @@ units[1] = [
 				name: 'Meteor',
 				cost: 2,
 				target: 'tile',
-				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
+				range: [ [0,2],[0,-2],[2,0],[-2,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -392,13 +392,13 @@ io.sockets.on('connection', function(socket){
 		liveSockets[p2].emit('update', {'units': units});
 	}
 
-	//restore energy of all units
-	function restoreAllEnergy()
+	//restore energy of player's units only
+	function restoreAllEnergy(user_ID)
 	{
-		for (i = 1; i <= 2; i++)
+		var myUnit = units[getUnitIndex(user_ID)]; 
+		for (i = 0; i < myUnit.length; i++)
 		{
-			for (j = 0; j < units[i].length; j++)
-				units[i][j].energy = units[i][j].maxenergy; 
+			myUnit[i].energy = myUnit[i].maxenergy; 
 		}
 	}
 
@@ -418,12 +418,6 @@ io.sockets.on('connection', function(socket){
 	socket.on('endturn', function(data){
 		if (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)))
 		{
-			restoreAllEnergy();
-			emitUpdatedUnits();
-
-			//refresh images
-			//
-
 			switch (currentturn)
 			{
 				case 0:
@@ -433,15 +427,18 @@ io.sockets.on('connection', function(socket){
 					currentturn = 2;
 					console.log("player 2's turn");
 					module.exports.userID = p2;
+					restoreAllEnergy(p2);
 					liveSockets[p2].emit('yourturn', {}); 
 					break; 
 				case 2:
 					currentturn = 1; 
 					console.log("player 1's turn");
 					module.exports.userID = p1;
+					restoreAllEnergy(p1);
 					liveSockets[p1].emit('yourturn', {}); 
 					break;
 			}
+			emitUpdatedUnits();
 		}
 	});
 
