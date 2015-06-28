@@ -35,8 +35,8 @@ var isReady = [];
 var nextUserID = 1;
 
 // Server variables
-var p1;
-var p2;
+var p1 = null;
+var p2 = null;
 var currentturn = 0;	// 0 means game is not underway, 1 means it is p1's turn, 2 means it is p2's turn
 var ready = 0;			//keep track of when game has started. when ready == 2, game has started
 
@@ -389,10 +389,38 @@ units[2] = [
 
 
 // socket connection
-io.sockets.on('connection', function(socket) {
+io.sockets.on('connection', function(socket){
 	var userID = nextUserID++;
 	liveSockets[userID] = socket;
 	console.log("New connection of ID " + userID);
+
+	//will either return 1 or 2
+		//used to easily access units[1] or units[2]
+		function getUnitIndex(user_ID)
+		{
+			switch (user_ID)
+			{
+				case p1:
+					return 1;  
+				case p2:
+					return 2;
+			}
+		}
+
+		//will either return 1 or 2
+		//used to easily access units[1] or units[2]
+		function getEnemyUnitIndex(user_ID)
+		{
+			switch (user_ID)
+			{
+				case p1:
+					return 2;  
+				case p2:
+					return 1;
+			}
+		}
+
+
 
 	//send both players updated unit information
 	function emitUpdatedUnits()
@@ -409,6 +437,12 @@ io.sockets.on('connection', function(socket) {
 			for (j = 0; j < units[i].length; j++)
 				units[i][j].energy = units[i][j].maxenergy; 
 		}
+	}
+
+	//make sure it's the player's turn
+	function isPlayersTurn(userID, currentturn)
+	{
+		return (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)));
 	}
 
 	//end turn
@@ -429,11 +463,13 @@ io.sockets.on('connection', function(socket) {
 				case 1:
 					currentturn = 2;
 					console.log("player 2's turn");
+					module.exports.userID = p2;
 					liveSockets[p2].emit('yourturn', {}); 
 					break; 
 				case 2:
 					currentturn = 1; 
 					console.log("player 1's turn");
+					module.exports.userID = p1;
 					liveSockets[p1].emit('yourturn', {}); 
 					break;
 			}
@@ -442,25 +478,30 @@ io.sockets.on('connection', function(socket) {
 
 	//ready up
 	socket.on('readyup', function(data){
-		if (ready < 2)
-		{
-			if (!isReady[userID])
+		//console.log("Ready up: " + p1 + ", " + p2); 
+		//if ((p1 != null) && (p2 != null))
+		//{
+			if (ready < 2)
 			{
-				isReady[userID] = 1; 
-				console.log("User " + userID + " is ready.");
-				ready++;  
-
-				if (ready == 2)
+				if (!isReady[userID])
 				{
-					console.log("Both players are ready. Game starts."); 
-					currentturn = 1; 
-					liveSockets[p1].emit("startgame", {'playerturn': '1'}); 
-					liveSockets[p2].emit("startgame", {'playerturn': '1'}); 
+					isReady[userID] = 1; 
+					console.log("User " + userID + " is ready.");
+					ready++;  
+
+					if (ready == 2)
+					{
+						console.log("Both players are ready. Game starts."); 
+						currentturn = 1; 
+						liveSockets[p1].emit("startgame", {'playerturn': '1'}); 
+						liveSockets[p2].emit("startgame", {'playerturn': '1'}); 
+					}
 				}
+				else
+					console.log("User " + userID + " is already ready."); 	
 			}
-			else
-				console.log("User " + userID + " is already ready."); 	
-		}
+		//}
+		
 	}); 
 
 	// Assigns 2 players to play
@@ -485,6 +526,9 @@ io.sockets.on('connection', function(socket) {
 			if (!((userID == p1) || (userID == p2)))
 				socket.emit('playersfull', {});
 		}
+		module.exports.userID = p1;
+		module.exports.p1 = p1;
+		module.exports.p2 = p2;
 	});
 
 	//playermove
@@ -492,30 +536,10 @@ io.sockets.on('connection', function(socket) {
 	//socket.emit('playermove', {type: 'skill', skill: 'attack', unit: 0, target: 0});
 	socket.on('playermove', function(data) {
 
-		//will either return 1 or 2
-		//used to easily access units[1] or units[2]
-		function getUnitIndex()
+			//make sure it's a valid player move
+		function isValidPlayerMove(data)
 		{
-			switch (userID)
-			{
-				case p1:
-					return 1;  
-				case p2:
-					return 2;
-			}
-		}
-
-		//will either return 1 or 2
-		//used to easily access units[1] or units[2]
-		function getEnemyUnitIndex()
-		{
-			switch (userID)
-			{
-				case p1:
-					return 2;  
-				case p2:
-					return 1;
-			}
+			return ((data.unit != null) && ((data.type == 'move') || (data.type == 'skill')));
 		}
 
 		
@@ -526,146 +550,9 @@ io.sockets.on('connection', function(socket) {
 
 		//all functions for move
 
-		//makes sure the user can only move left, right, up, or down
-		//direction (ex: [1, 0], [0, 1], [1, 0], etc...)
-		function isValidDirection(direction){
-			if ((direction[0] == -1) || (direction[0] == 1))
-				return (direction[1] == 0);
+		var movementUtil = require('./movement.js'); 
 
-			if ((direction[1] == -1) || (direction[1] == 1))
-				return (direction[0] == 0);
-		
-			return false; 
-		}
-
-		//make sure the position is between [0, 0] and [4, 4]
-		function isValidPosition(position) {
-			return ((position[0] >= 0) && (position[1] >= 0) && (position[0] <= 4) && (position[1] <= 4));	
-		}
-
-		//ensure there are no collisions
-		//make sure position isn't on an occupied space
-		function isOverlapping(position){
-			for (i = 0; i < units[1].length; i++)
-			{
-				if ((units[1][i].position.equals(position)) || (units[2][i].position.equals(position)))
-				{ 
-					return true; 
-				}
-			}
-			return false; 
-		}
-
-		//assume the direction is already valid
-		//move the unit to a new position
-		//returns a new position if valid move
-		function movePosition(direction, unit) {
-			var newPosition = [0, 0];	//initialize variable
-			var index; 
-			switch (userID)
-			{
-				case p1:
-					index = 1; 
-					break; 
-				case p2:
-					index = 2; 
-					break; 
-			}
-			var temp = units[index][unit];
-	 		newPosition[0] = direction[0] + temp.position[0];
-	 		newPosition[1] = direction[1] + temp.position[1];
-
-	 		if (!isValidPosition(newPosition))
-	 			console.log("newPosition: " + newPosition + " is off the board");
-	 		else if (isOverlapping(newPosition))	//overlapping position
-	 			console.log("newPosition: " + newPosition + "is overlapping with another piece");
-	 		else
-	 			units[index][unit].position = newPosition; 
-	 		
-			return newPosition; 
-		}
-
-		//checks movement's energy level and movement cost level to see if it can move
-		//untit is an index of what to move (units[index][unit])
-		function hasMoveEnergy(unit)
-		{
-			var index = getUnitIndex();
-			var actualUnit = units[index][unit];
-
-			console.log("Energy: " + actualUnit.energy);
-			console.log("Move Cost: " + actualUnit.movecost); 
-
-			if (actualUnit.energy >= actualUnit.movecost)
-			{
-				console.log("Movement granted");
-				//actualUnit.energy = actualUnit.energy - actualUnit.movecost;
-				return true;  
-			}
-			else
-			{
-				console.log("You don't have enough energy to move!");
-				return false; 
-			}
-		}
-
-		//make sure it's the player's turn
-		function isPlayersTurn(userID, currentturn)
-		{
-			return (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)));
-		}
-
-		//make sure it's a valid player move
-		function isValidPlayerMove(data)
-		{
-			return ((data.unit != null) && ((data.type == 'move') || (data.type == 'skill')));
-		}
-
-		//has valid direction
-		function hasValidDirection(data)
-		{
-			return ((data.arg) && (data.arg.direction != null)); 
-		}
-
-		//process movement
-		//returns true if the move went through, false otherwise
-		function processMovement(data)
-		{
-			if (hasMoveEnergy(data.unit))
-			{
-				//make sure there's a valid direction
-				if (hasValidDirection(data))
-				{
-					if (isValidDirection(data.arg.direction))
-					{
-						direction = data.arg.direction;
-						var newPosition = movePosition(data.arg.direction, data.unit);  
-						if (!isValidPosition(newPosition))
-						{
-							console.log("Invalid move! Your piece moved off the board!"); 
-						}
-						else
-						{
-							console.log("New position is " + newPosition);
-							//decrease energy
-							var index = getUnitIndex();
-							var actualUnit = units[index][data.unit];
-							actualUnit.energy = actualUnit.energy - actualUnit.movecost;
-							return true; 
-						}
-					}
-					else
-						console.log("Your direction isn't up, down, left, or right."); 
-				}
-				else 
-					console.log("Direction is null!"); 
-			}
-			else 
-				console.log("You don't have enough energy to move."); 
-
-			return false; 
-		}
-
-
+		//movement ends here
 
 		//skill variables
 
@@ -693,13 +580,13 @@ io.sockets.on('connection', function(socket) {
 				function(range, target, unitArray)	//enemy unit
 				{
 					var unitPosition = unitArray.position; 
-					targetPosition = units[getEnemyUnitIndex()][target].position;
+					targetPosition = units[getEnemyUnitIndex(userID)][target].position;
 					return (isWithinRange(unitPosition, targetPosition, range));  
 				},
 				function(range, target, unitArray)	//ally unit
 				{
 					var unitPosition = unitArray.position;
-					targetPosition = units[getUnitIndex()][target].position;
+					targetPosition = units[getUnitIndex(userID)][target].position;
 					return (isWithinRange(unitPosition, targetPosition, range));
 				},
 				function(range, target, unitArray)	//tile
@@ -759,7 +646,7 @@ io.sockets.on('connection', function(socket) {
 			function (actionArray, unitArray, target)	//damage
 				{
 					var thisPosition = unitArray.position;
-					var enemyUnit = units[getEnemyUnitIndex()][target]; 
+					var enemyUnit = units[getEnemyUnitIndex(userID)][target]; 
 					var enemyPosition = enemyUnit.position; 
 					console.log("My position: " + thisPosition);
 					console.log("Enemy Position: " + enemyPosition);
@@ -788,7 +675,7 @@ io.sockets.on('connection', function(socket) {
 		//skillName is name of the skill
 		function getSkillArray(skillName, unit)
 		{
-			var index = getUnitIndex();
+			var index = getUnitIndex(userID);
 			var skills = units[index][unit].skills; 
 			for (i = 0; i < skills.length; i++)
 			{
@@ -811,7 +698,7 @@ io.sockets.on('connection', function(socket) {
 			if (unitArray.energy >= skillArray.cost)
 			{
 				console.log("Has enough energy to do skill");
-				return true;  
+				return true;
 			}
 			else
 			{
@@ -826,7 +713,7 @@ io.sockets.on('connection', function(socket) {
 		//skillArray = skill array
 		function processSkillMove(unit, skillArray, target)
 		{
-			var unitIndex = getUnitIndex();
+			var unitIndex = getUnitIndex(userID);
 			var unitArray = units[unitIndex][unit];
 
 			if (hasSkillEnergy(unitArray, skillArray))
@@ -875,7 +762,7 @@ io.sockets.on('connection', function(socket) {
 				{
 					case ('move'):
 					{
-						if (processMovement(data))
+						if (movementUtil.processMovement(data))
 						{
 							console.log("Move processed");
 							emitUpdatedUnits();
@@ -913,4 +800,7 @@ io.sockets.on('connection', function(socket) {
 		console.log("Releasing socket of ID " + userID);
 		delete liveSockets[userID];
 	});
+	module.exports.units = units; 
+	module.exports.getUnitIndex = getUnitIndex;
+
 });
