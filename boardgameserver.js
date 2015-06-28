@@ -445,6 +445,12 @@ io.sockets.on('connection', function(socket){
 		return (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)));
 	}
 
+	//is the current player in the game?
+	function isInGame(player)
+	{
+		return ((player == p1) || (player == p2));
+	}
+
 	//end turn
 	socket.on('endturn', function(data){
 		if (((userID == p1) && (currentturn == 1)) || ((userID == p2) && (currentturn == 2)))
@@ -478,9 +484,9 @@ io.sockets.on('connection', function(socket){
 
 	//ready up
 	socket.on('readyup', function(data){
-		//console.log("Ready up: " + p1 + ", " + p2); 
-		//if ((p1 != null) && (p2 != null))
-		//{
+		//Ready up only if in game
+		if (isInGame(userID))
+		{
 			if (ready < 2)
 			{
 				if (!isReady[userID])
@@ -500,7 +506,9 @@ io.sockets.on('connection', function(socket){
 				else
 					console.log("User " + userID + " is already ready."); 	
 			}
-		//}
+		}
+		else
+			console.log("UserID " + userID + " is not in game yet"); 
 		
 	}); 
 
