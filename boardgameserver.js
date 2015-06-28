@@ -59,11 +59,7 @@ units[1] = [
 				name: 'Attack',
 				cost: 1,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -75,11 +71,7 @@ units[1] = [
 				name: 'Bullet Punch',
 				cost: 3,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -110,11 +102,7 @@ units[1] = [
 				name: 'Attack',
 				cost: 1,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -133,10 +121,7 @@ units[1] = [
 					{
 						type: 'movement',
 						// this will return true if the direction of movement is legal
-						range: function(dir) {
-							if (dir[0] <= 1 && dir[0] >= -1 && dir[1] <= 1 && dir[1] >= -1) return true;
-							else return false;
-						}
+						range: [ [0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1] ]
 					}
 				]
 			},
@@ -161,11 +146,7 @@ units[1] = [
 				name: 'Attack',
 				cost: 1,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -177,11 +158,7 @@ units[1] = [
 				name: 'Bash',
 				cost: 2,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'debuff',
@@ -211,11 +188,7 @@ units[1] = [
 				name: 'Attack',
 				cost: 1,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -227,10 +200,7 @@ units[1] = [
 				name: 'Meteor',
 				cost: 2,
 				target: 'tile',
-				range: function(dir) {
-					if (Math.abs(dir[0]) + Math.abs(dir[1]) === 2) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -259,11 +229,7 @@ units[1] = [
 				name: 'Attack',
 				cost: 1,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -275,10 +241,7 @@ units[1] = [
 				name: 'Heal',
 				cost: 2,
 				target: 'ally unit',
-				range: function(dir) {
-					if (dir[0] <= 1 && dir[0] >= -1 && dir[1] <= 1 && dir[1] >= -1) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1] ],
 				action: [
 					{
 						type: 'heal',
