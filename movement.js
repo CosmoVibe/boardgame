@@ -1,4 +1,7 @@
 var boardgameserver = require('./boardgameserver.js');
+var serverUtility = require('./bgServerUtility.js'); 
+var units = require('./units.js').units;
+
 //makes sure the user can only move left, right, up, or down
 		//direction (ex: [1, 0], [0, 1], [1, 0], etc...)
 		function isValidDirection(direction){
@@ -19,9 +22,9 @@ var boardgameserver = require('./boardgameserver.js');
 		//ensure there are no collisions
 		//make sure position isn't on an occupied space
 		function isOverlapping(position){
-			for (i = 0; i < boardgameserver.units[1].length; i++)
+			for (i = 0; i < units[1].length; i++)
 			{
-				if ((boardgameserver.units[1][i].position.equals(position)) || (boardgameserver.units[2][i].position.equals(position)))
+				if ((units[1][i].position.equals(position)) || (units[2][i].position.equals(position)))
 				{ 
 					return true; 
 				}
@@ -34,9 +37,9 @@ var boardgameserver = require('./boardgameserver.js');
 		//returns a new position if valid move
 		function movePosition(direction, unit) {
 			var newPosition = [0, 0];	//initialize variable
-			var index = boardgameserver.getUnitIndex(boardgameserver.userID); 
+			var index = serverUtility.getUnitIndex(boardgameserver.userID); 
 	
-			var temp = boardgameserver.units[index][unit];
+			var temp = units[index][unit];
 			console.log("Original Position: " + temp.position); 
 	 		newPosition[0] = direction[0] + temp.position[0];
 	 		newPosition[1] = direction[1] + temp.position[1];
@@ -46,7 +49,7 @@ var boardgameserver = require('./boardgameserver.js');
 	 		else if (isOverlapping(newPosition))	//overlapping position
 	 			console.log("newPosition: " + newPosition + "is overlapping with another piece");
 	 		else
-	 			boardgameserver.units[index][unit].position = newPosition; 
+	 			units[index][unit].position = newPosition; 
 	 		
 			return newPosition; 
 		}
@@ -55,10 +58,10 @@ var boardgameserver = require('./boardgameserver.js');
 		//untit is an index of what to move (units[index][unit])
 		function hasMoveEnergy(unit)
 		{
-			var index = boardgameserver.getUnitIndex(boardgameserver.userID);
-			var actualUnit = boardgameserver.units[index][unit];
+			var index = serverUtility.getUnitIndex(boardgameserver.userID);
+			var actualUnit = units[index][unit];
 			console.log("Player: " + boardgameserver.userID);
-			console.log("Get unit index: " + boardgameserver.getUnitIndex(boardgameserver.userID));
+			console.log("Get unit index: " + serverUtility.getUnitIndex(boardgameserver.userID));
 			console.log("Test Position: " + actualUnit.position); 
 			console.log("Energy: " + actualUnit.energy);
 			console.log("Move Cost: " + actualUnit.movecost); 
@@ -103,8 +106,8 @@ var boardgameserver = require('./boardgameserver.js');
 						{
 							console.log("New position is " + newPosition);
 							//decrease energy
-							var index = boardgameserver.getUnitIndex(boardgameserver.userID);
-							var actualUnit = boardgameserver.units[index][data.unit];
+							var index = serverUtility.getUnitIndex(boardgameserver.userID);
+							var actualUnit = units[index][data.unit];
 							actualUnit.energy = actualUnit.energy - actualUnit.movecost;
 							return true; 
 						}
