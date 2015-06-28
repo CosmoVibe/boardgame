@@ -52,6 +52,7 @@ function occupied(x,y) {
 
 // funcDirSearch(func) - all of the tile coordinates are passed into func, and if returned true, are added to the return array
 // the input of func is dir, the DIFFERENCE between the selected unit's position and the coordinate
+// the return array holds tile coordinates
 function funcDirSearch(func) {
 	console.log(func);
 	var arr = [];
