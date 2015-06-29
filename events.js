@@ -35,37 +35,55 @@ function tileclick(id) {
 		}
 		// action selected
 		else {
+		
 			// unit and selection highlighted, tile clicked
-
-			// movement
-			if (selectedActionIndex == 0 && selectedUnitIndex[0] == playernum) {
-				// send move to server
-				socket.emit('playermove', {
-					unit: selectedUnitIndex[1],
-					type: 'move',
-					arg: {
-						direction: [
-							id[0]-units[playernum][selectedUnitIndex[1]].position[0],
-							id[1]-units[playernum][selectedUnitIndex[1]].position[1]
-						]
+			if (selectedUnitIndex[0] == playernum) {
+				var success = false;
+				// movement
+				if (selectedActionIndex == 0) {
+					// send move to server
+					socket.emit('playermove', {
+						unit: selectedUnitIndex[1],
+						type: 'move',
+						arg: {
+							direction: [
+								id[0]-units[playernum][selectedUnitIndex[1]].position[0],
+								id[1]-units[playernum][selectedUnitIndex[1]].position[1]
+							]
+						}
+					});
+					// local client movement
+					/*
+					units[playernum][selectedUnitIndex[1]].position = clone(id);
+					unitrefresh();
+					*/
+					success = true;
+				}
+				else {
+					if (selectedUnit().skills[n-1].target === 'tile') {
+						socket.emit('playermove', {
+							unit: selectedUnitIndex[1],
+							type: 'skill',
+							index: n-1,
+							arg: {
+								tile: selectedTileIndex
+							}
+						});
+						success = true;
 					}
-				});
-				// local client movement
-				/*
-				units[playernum][selectedUnitIndex[1]].position = clone(id);
-				unitrefresh();
-				*/
+				}
+				// reset and clear
+				if (success) {
+					resetmenugroup();
+					menugroup.hide();
+					menuLayer.draw();
 
-				// clear selections
-				resetmenugroup();
-				menugroup.hide();
-				menuLayer.draw();
-
-				resettileselection();
-				resethighlightedtiles();				
-				resetunitselection();
-				
-				hideInfo();
+					resettileselection();
+					resethighlightedtiles();				
+					resetunitselection();
+					
+					hideInfo();
+				}
 			}
 		}
 	}
@@ -121,6 +139,59 @@ function unitclick(id) {
 		// action selected
 		else {
 			// click on unit after unit skill is selected
+			var success = false;
+			switch (selectedUnit().skills[n-1].target) {
+				case 'unit':
+					socket.emit('playermove', {
+						unit: selectedUnitIndex[1],
+						type: 'skill',
+						index: n-1,
+						arg: {
+							target: id[1]
+						}
+					});
+					success = true;
+					break;
+				case 'ally unit':
+					if (id[0] === playernum) {
+						socket.emit('playermove', {
+							unit: selectedUnitIndex[1],
+							type: 'skill',
+							index: n-1,
+							arg: {
+								target: id[1]
+							}
+						});
+						success = true;
+					}
+					break;
+				case 'enemy unit':
+					if (id[0] === (playernum === 1 ? 2 : 1) ) {
+						socket.emit('playermove', {
+							unit: selectedUnitIndex[1],
+							type: 'skill',
+							index: n-1,
+							arg: {
+								target: id[1]
+							}
+						});
+						success = true;
+					}
+					break;
+			}
+
+			// reset and clear
+			if (success) {
+				resetmenugroup();
+				menugroup.hide();
+				menuLayer.draw();
+
+				resettileselection();
+				resethighlightedtiles();				
+				resetunitselection();
+				
+				hideInfo();
+			}
 		}
 	}
 	menuLayer.draw();
@@ -161,22 +232,10 @@ function skillButtonsClick(n) {
 		}
 		else {
 			
-			// attack
-			/*if (selectedUnitIndex[0] != -1) {
-				// highlight all of the available move locations
-				var x = selectedUnit().position[0];
-				var y = selectedUnit().position[1];
-				if (occupied(x+1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x+1,y, 'red');
-				if (occupied(x-1,y) === (playernum === 1 ? 2 : 1)) highlighttile(x-1,y, 'red');
-				if (occupied(x,y+1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y+1, 'red');
-				if (occupied(x,y-1) === (playernum === 1 ? 2 : 1)) highlighttile(x,y-1, 'red');
-			}*/
-			
-			
 			// in case the skill for this button doesn't exist
 			if (selectedUnit().skills[n-1]) {
 
-			// make sure the skill is not passive and toggleable
+				// make sure the skill is not passive and toggleable
 				var sel = true;
 				if (selectedUnit().skills[n-1].target === 'passive') {
 					if (!selectedUnit().skills[n-1].toggleable) sel = false;
@@ -188,27 +247,29 @@ function skillButtonsClick(n) {
 					// first check what is targetable
 					// then find what needs to be highlighted
 					// finally highlight
+					var tilearr = [];
+					if (selectedUnit().skills[n-1].range) {
+						for (var k = 0; k < selectedUnit().skills[n-1].range.length; k++) {
+							tilearr[k] = [selectedUnit().position[0]+selectedUnit().skills[n-1].range[k][0],selectedUnit().position[1]+selectedUnit().skills[n-1].range[k][1]];
+						}
+					}
 					switch (selectedUnit().skills[n-1].target) {
 						case 'unit':
-							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
 							for (var k = 0; k < tilearr.length; k++) {
 								if (occupied(tilearr[k][0],tilearr[k][1]) != 0) highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
 							break;
 						case 'enemy unit':
-							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
 							for (var k = 0; k < tilearr.length; k++) {
 								if (occupied(tilearr[k][0],tilearr[k][1]) === (playernum === 1 ? 2 : 1)) highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
 							break;
 						case 'ally unit':
-							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
 							for (var k = 0; k < tilearr.length; k++) {
 								if (occupied(tilearr[k][0],tilearr[k][1]) === playernum) highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
 							break;
 						case 'tile':
-							var tilearr = funcDirSearch(selectedUnit().skills[n-1].range);
 							for (var k = 0; k < tilearr.length; k++) {
 								highlighttile(tilearr[k][0],tilearr[k][1], 'red');
 							}
@@ -260,9 +321,11 @@ confirmButton.on('click', function(evt) {
 		confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
 	}
 	else {
-		socket.emit('readyup',{});
-		confirmButtonText.setAttrs({text: "ready"});
-		confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+		if (playernum != -1) {
+			socket.emit('readyup',{});
+			confirmButtonText.setAttrs({text: "ready"});
+			confirmButtonText.offset({x: confirmButtonText.width()/2, y: confirmButtonText.height()/2});
+		}
 	}
 	overlayLayer.draw();
 });

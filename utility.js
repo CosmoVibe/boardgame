@@ -50,20 +50,6 @@ function occupied(x,y) {
 	return 0;
 }
 
-// funcDirSearch(func) - all of the tile coordinates are passed into func, and if returned true, are added to the return array
-// the input of func is dir, the DIFFERENCE between the selected unit's position and the coordinate
-// the return array holds tile coordinates
-function funcDirSearch(func) {
-	console.log(func);
-	var arr = [];
-	for (var x = 0; x < mapx; x++) {
-		for (var y = 0; y < mapy; y++) {
-			if (func([selectedUnit().position[0]-x,selectedUnit().position[1]-y])) arr.push([x,y]);
-		}
-	}
-	return arr;
-}
-
 // selectedUnit() - returns the currently selected unit
 function selectedUnit() {
 	if (selectedUnitIndex[0] != -1) return units[selectedUnitIndex[0]][selectedUnitIndex[1]];
