@@ -130,10 +130,23 @@ var allActions =
 		console.log(isWithinRange(unitArray.position, target, actionArray.range));
 		console.log(movementUtil.isValidPosition(distance));
 		console.log((!movementUtil.isOverlapping(distance))); 
-		var canMove = ((isWithinRange(unitArray.position, target, actionArray.range)) && (movementUtil.isValidPosition(target)) && (!movementUtil.isOverlapping(target)));
+		var canMove = ((movementUtil.isValidPosition(target)) && (!movementUtil.isOverlapping(target)));
 		if (canMove)
 			unitArray.position = target;
 		return canMove;
+	}, 
+	function(actionArray, unitArray, target)	//debuff
+	{
+		//debuff
+	}, 
+	function(actionArray, unitArray, target)	//heal
+	{
+		var allyUnit = units[serverUtility.getUnitIndex(boardgameserver.userID)][target];
+		var healAmount = actionArray.amount; 
+		allyUnit.hp = allyUnit.hp + healAmount; 
+		if (allyUnit.hp > allyUnit.maxhp)
+			allUnit.hp = allyUnit.maxhp; 
+		return true;
 	}
 ]; 
 

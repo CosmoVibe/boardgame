@@ -225,7 +225,33 @@ units[2] = [
 		maxenergy: 3,
 		energy: 3,
 		movecost: 1,
-		skills: {}
+		skills: [
+			{
+				name: 'Attack',
+				cost: 1,
+				target: 'enemy unit',
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
+				action: [
+					{
+						type: 'damage',
+						ratio: 1
+					}
+				]
+			},
+			{
+				name: 'Bash',
+				cost: 2,
+				target: 'enemy unit',
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
+				action: [
+					{
+						type: 'debuff',
+						debuff: 'stun',
+						duration: 1
+					}
+				]
+			},
+		]
 	},
 	{
 		id: 1,	// rogue
@@ -237,7 +263,35 @@ units[2] = [
 		maxenergy: 5,
 		energy: 5,
 		movecost: 1,
-		skills: {}
+		skills: [
+			{
+				name: 'Attack',
+				cost: 1,
+				target: 'enemy unit',
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
+				action: [
+					{
+						type: 'damage',
+						ratio: 1
+					}
+				]
+			},
+			{
+				// This passive allows this unit to move diagonally (see range test)
+				name: 'Swiftness',
+				cost: 0,
+				target: 'passive',
+				toggle: true,
+				toggleable: false,
+				action: [
+					{
+						type: 'movement',
+						// this will return true if the direction of movement is legal
+						range: [ [0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1] ]
+					}
+				]
+			},
+		]
 	},
 	{
 		id: 0,	// fighter
@@ -249,15 +303,12 @@ units[2] = [
 		maxenergy: 3,
 		energy: 3,
 		movecost: 1,
-		skills: {
-			attack: {
+		skills: [
+			{
+				name: 'Attack',
 				cost: 1,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -265,14 +316,11 @@ units[2] = [
 					}
 				]
 			},
-			bash: {
+			{
+				name: 'Bullet Punch',
 				cost: 3,
 				target: 'enemy unit',
-				range: function(dir) {
-					if (dir[0] === 0 && (dir[1] === 1 || dir[1] === -1)) return true;
-					else if (dir[1] === 0 && (dir[0] === 1 || dir[0] === -1)) return true;
-					else return false;
-				},
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
 				action: [
 					{
 						type: 'damage',
@@ -280,7 +328,7 @@ units[2] = [
 					}
 				]
 			},
-		}
+		]
 	},
 	{
 		id: 4,	// support
@@ -292,7 +340,32 @@ units[2] = [
 		maxenergy: 3,
 		energy: 3,
 		movecost: 1,
-		skills: {}
+		skills: [
+			{
+				name: 'Attack',
+				cost: 1,
+				target: 'enemy unit',
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
+				action: [
+					{
+						type: 'damage',
+						ratio: 1
+					}
+				]
+			},
+			{
+				name: 'Heal',
+				cost: 2,
+				target: 'ally unit',
+				range: [ [0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1] ],
+				action: [
+					{
+						type: 'heal',
+						amount: 20
+					}
+				]
+			},
+		]
 	},
 	{
 		id: 3,	// mage
@@ -304,7 +377,32 @@ units[2] = [
 		maxenergy: 3,
 		energy: 3,
 		movecost: 1,
-		skills: {}
+		skills: [
+			{
+				name: 'Attack',
+				cost: 1,
+				target: 'enemy unit',
+				range: [ [0,1],[0,-1],[1,0],[-1,0] ],
+				action: [
+					{
+						type: 'damage',
+						ratio: 1
+					}
+				]
+			},
+			{
+				name: 'Meteor',
+				cost: 2,
+				target: 'tile',
+				range: [ [0,2],[0,-2],[2,0],[-2,0],[1,1],[-1,1],[1,-1],[-1,-1] ],
+				action: [
+					{
+						type: 'damage',
+						ratio: 1.75
+					}
+				]
+			},
+		]
 	}
 ];
 

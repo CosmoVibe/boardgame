@@ -178,13 +178,18 @@ io.sockets.on('connection', function(socket){
 						{
 							//socket.emit('update', {'units': units});
 							var skillArray = skillUtil.getSkillArray(data.skill, data.unit);
-							if (skillUtil.processSkillMove(data.unit, skillArray, data.target))
+							if (skillArray != null)
 							{
-								console.log("Skill processed");
-								serverUtility.emitUpdatedUnits();
+								if (skillUtil.processSkillMove(data.unit, skillArray, data.target))
+								{
+									console.log("Skill processed");
+									serverUtility.emitUpdatedUnits();
+								}
+								else
+									console.log("Skill not processed"); 
 							}
 							else
-								console.log("Skill not processed");  
+								console.log("Skill name doesn't exist"); 
 						}
 						else 
 							console.log("Name is null!");
