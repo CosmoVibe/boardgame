@@ -281,7 +281,7 @@ units[1] = [
 				name: 'Meteor',
 				cost: 2,
 				target: 'tile',
-				range: [ [0,2],[0,-2],[2,0],[-2,0] ],
+				range: [ [0,2],[0,-2],[2,0],[-2,0],[1,1],[-1,1],[1,-1],[-1,-1] ],
 				action: [
 					{
 						type: 'damage',
@@ -495,7 +495,7 @@ units[2] = [
 				name: 'Meteor',
 				cost: 2,
 				target: 'tile',
-				range: [ [0,2],[0,-2],[2,0],[-2,0] ],
+				range: [ [0,2],[0,-2],[2,0],[-2,0],[1,1],[-1,1],[1,-1],[-1,-1] ],
 				action: [
 					{
 						type: 'damage',
