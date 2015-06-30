@@ -6,14 +6,14 @@ var units = require('./units.js').units;
 //skill variables
 //returns the index to the array of functions all skills
 
-//checks to see if the skill move 
+//checks to see if the skill move is within range and on the board
 //unitPosition = position of your unit (coordinate)
 //targetPosition = position of the target (coordinate)
 function isWithinRange(unitPosition, targetPosition, range)
 {
 	var distance = [0, 0];	//initialize variables
-	distance[0] = unitPosition[0] - targetPosition[0];
-	distance[1] = unitPosition[1] - targetPosition[1];
+	distance[0] = targetPosition[0] - unitPosition[0];
+	distance[1] = targetPosition[1] - unitPosition[1];
 	console.log("unitPosition: " + unitPosition);
 	console.log("targetPosition: " + targetPosition);
 	console.log(distance); 
@@ -98,7 +98,7 @@ function getAllActionsIndex(actionName)
 
 var allActions = 
 [
-	function(actionArray, unitArray, target)	//damage
+	function (actionArray, unitArray, target)	//damage
 	{
 		var thisPosition = unitArray.position;
 		var enemyUnit = units[serverUtility.getEnemyUnitIndex(boardgameserver.userID)][target]; 
@@ -123,7 +123,17 @@ var allActions =
 		console.log("Unit Array Position: " + unitArray.position);
 		console.log("Target: " + target);
 		console.log("Range: " + actionArray.range); 
-		return (isWithinRange(unitArray.position, target, actionArray.range));
+		var distance = [0, 0];
+		var unitPosition = unitArray.position; 
+		distance[0] = target[0] - unitPosition[0];
+		distance[1] = target[1] - target[1];
+		console.log(isWithinRange(unitArray.position, target, actionArray.range));
+		console.log(movementUtil.isValidPosition(distance));
+		console.log((!movementUtil.isOverlapping(distance))); 
+		var canMove = ((isWithinRange(unitArray.position, target, actionArray.range)) && (movementUtil.isValidPosition(target)) && (!movementUtil.isOverlapping(target)));
+		if (canMove)
+			unitArray.position = target;
+		return canMove;
 	}
 ]; 
 
